@@ -36,12 +36,11 @@
     - id_user *(ID юзера телеграмма)*
     - nick_name *(имя)*
   - **safe_type** *(типы сейфов`*`)*
-    - id *(ID)*
     - name *(тип cейфа)*
   - **safe_list** *(названия сейфов)*
     - id *(ID)*
     - name *(название сейфа)*
-    - id_safe_type *(ID тип cейфа)*
+    - safe_type *(тип cейфа)*
   - **safe_user** *(принадлежность сейфа юзеру)*
     - id *(ID)*
     - id_safe *(ID cейфа)*
