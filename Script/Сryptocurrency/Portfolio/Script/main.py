@@ -1,5 +1,7 @@
 import logging
 import sys
+from base.cash import ModelCash
+from base.coin import ModelCoin
 
 logging.basicConfig(
     level=logging.INFO,
@@ -12,6 +14,11 @@ logging.basicConfig(
 
 if __name__ == '__main__':
     logging.info('Наладка логирования')
+    try:
+        coin = ModelCoin.check_coin('ETH')
+        ModelCash.add_cash(1, 'ETH', 1.2, 10000.0)
+    except Exception as e:
+        print(str(e))
 
 
 
