@@ -33,12 +33,13 @@ class ModelCash:
         :param price_buy_fiat: Цена покупки
         """
         try:
+            logging.info(f'Добавить счет id_safe:{id_safe} coin:{coin} amount_buy:{amount_buy} '
+                         f'price_buy_fiat:{price_buy_fiat}')
             id_cash = Cash.create(id_safe=id_safe,
                         coin=coin,
                         amount_buy=amount_buy,
                         price_buy_fiat=price_buy_fiat)
-            logging.info(f'Добавлен счет ID:{id_cash} id_safe:{id_safe} coin:{coin} amount_buy:{amount_buy} '
-                         f'price_buy_fiat:{price_buy_fiat}')
+            logging.info(f'Новый счет ID:{id_cash}')
         except Exception as err:
             raise ExceptionInsert(cls.__name_model, str(err))
 
