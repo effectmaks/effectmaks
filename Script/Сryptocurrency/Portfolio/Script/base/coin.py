@@ -1,7 +1,6 @@
 import logging
 from peewee import TextField, Model, fn
 from .sqlite.connectSqlite import ConnectSqlite, ExceptionSelect, ExceptionInsert
-from datetime import datetime
 
 
 class Coin(Model):
@@ -17,6 +16,7 @@ class Coin(Model):
 
 class ModelCoin:
     __name_model = 'coin'
+
     @classmethod
     def __check_coin(cls, name: str) -> bool:
         """
@@ -34,7 +34,6 @@ class ModelCoin:
             return False  # пустой ответ на запрос - монет нет
         except Exception as err:
             raise ExceptionSelect(cls.__name_model, str(err))
-
 
     @classmethod
     def __create_coin(cls, name: str):
