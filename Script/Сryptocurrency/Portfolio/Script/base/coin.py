@@ -54,5 +54,4 @@ class ModelCoin:
         have_coin = cls.__check_coin(name)
         if have_coin:
             return
-        logging.info(f'Добавит новую монету {name}')
         cls.__create_coin(name)
