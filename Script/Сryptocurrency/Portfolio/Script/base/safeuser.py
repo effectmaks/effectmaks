@@ -25,7 +25,7 @@ class ModelSafe:
     @classmethod
     def __check_safe(cls, id_user: int, id_safe: int) -> bool:
         """
-        Проверка есть ли такой сейф у юзера
+        Проверка есть сейф у юзера
         """
         try:
             list_safe = Safeuser.select(fn.COUNT(Safeuser.id).alias('count_safe')).where(Safeuser.id_safe == id_safe, Safeuser.id_user == id_user)
@@ -63,7 +63,7 @@ class ModelSafe:
     def test_safe(cls, id_user: int, id_safe: int):
         """
         Проверка есть ли такой сейф у юзера.
-        Если сейфа нет, прикрепляем.
+        Если сейфа нет - прикрепляем.
         """
         logging.info(f'Проверка наличия ID сейф: {id_safe} у ID юзер:{id_user}')
         have_safe = cls.__check_safe(id_user, id_safe)
