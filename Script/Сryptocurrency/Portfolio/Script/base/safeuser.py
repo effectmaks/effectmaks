@@ -19,7 +19,7 @@ class Safeuser(Model):
         database = ConnectSqlite.get_connect()
 
 
-class ModelSafe:
+class ModelSafeuser:
     __name_model = 'safeuser'
 
     @classmethod
@@ -31,11 +31,11 @@ class ModelSafe:
             list_safe = Safeuser.select(fn.COUNT(Safeuser.id).alias('count_safe')).where(Safeuser.id_safe == id_safe, Safeuser.id_user == id_user)
             for sel in list_safe:
                 if sel.count_safe == 1:
-                    logging.warning(f'В таблице {cls.__name_model} у ID юзера:{id_user} уже есть ID сейфа:{id_safe}')
+                    logging.warning(f'В таблице {cls.__name_model} у ID юзера:{id_user} уже есть ID сейф:{id_safe}')
                     return True  # сейф есть
                 elif sel.count_safe > 1:
                     logging.warning(f'В таблице {cls.__name_model} у ID юзера:{id_user} больше одного '
-                                    f'ID сейфа:{id_safe} = {sel.count_safe} шт.')
+                                    f'ID сейф:{id_safe} = {sel.count_safe} шт.')
                     return True  # сейфы есть
                 return False  # цикл дальше продолжать не надо
             return False  # пустой ответ на запрос - сейфов нет
@@ -54,7 +54,7 @@ class ModelSafe:
         try:
             id_safe_user = Safeuser.create(id_safe=id_safe,
                                         id_user=id_user)
-            logging.info(f'Прикреплен ID сейф:{id_safe_user} id_safe:{id_safe} id_user:{id_user}')
+            logging.info(f'Прикреплен ID сейф юзера:{id_safe_user} id_safe:{id_safe} id_user:{id_user}')
             return id_safe_user
         except Exception as err:
             raise ExceptionInsert(cls.__name_model, str(err))
@@ -65,7 +65,7 @@ class ModelSafe:
         Проверка есть ли такой сейф у юзера.
         Если сейфа нет - прикрепляем.
         """
-        logging.info(f'Проверка наличия ID сейф: {id_safe} у ID юзер:{id_user}')
+        logging.info(f'Проверка наличия ID сейф:{id_safe} у ID юзер:{id_user}')
         have_safe = cls.__check_safe(id_user, id_safe)
         if have_safe:
             return
