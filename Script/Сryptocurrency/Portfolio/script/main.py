@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     load_dotenv('telegram_bot/api/keys.env')
     logging.info('Подключение TeleBot')
-    bot_telegram = TeleBot(os.getenv('BOT_TOKEN'))
+    bot_telegram = TeleBot(os.getenv('API_token'))
     logging.info('Подключение TeleBot - успешно')
 
     @bot_telegram.message_handler(content_types=['text'])
