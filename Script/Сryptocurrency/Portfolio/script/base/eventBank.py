@@ -4,7 +4,7 @@ from .sqlite.connectSqlite import ConnectSqlite
 from datetime import datetime
 
 
-class Event_bank(Model):
+class EventBank(Model):
     """
     База данных таблица Событий ввода и вывода средств
     """
