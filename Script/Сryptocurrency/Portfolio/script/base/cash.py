@@ -1,12 +1,12 @@
 import logging
 from peewee import DateTimeField, IntegerField, DoubleField, TextField, Model
 from .sqlite.connectSqlite import ConnectSqlite, ExceptionInsert
-from ..business_model.simpleDate import SimpleDate
+from business_model.simpledate import SimpleDate
 
 
 class Cash(Model):
     """
-    База данных таблица Счета в сейфе
+    База данных таблица Счета в сейфе.
     """
     id = IntegerField()
     date_time = DateTimeField()
@@ -24,15 +24,16 @@ class ModelCash:
     __name_model = 'cash'
 
     @classmethod
-    def add(cls, id_safe: int, date_time_str: str, coin: str, amount_buy: float, price_buy_fiat: float):
+    def add(cls, id_safe: int, date_time_str: str, coin: str, amount_buy: float, price_buy_fiat: float) -> int:
         """
-        Добавление счета монеты
+        Добавление счета монеты.
+        Исключения: конвертации даты, добавления записи.
         :param id_safe: ID сейфа
+        :param date_time_str: Дата и время добавления
         :param coin: Монета
         :param amount_buy: Количество купить
         :param price_buy_fiat: Цена покупки
         """
-
         logging.info(
                 f'Добавить счет id_safe:{id_safe} date_time:{date_time_str} coin:{coin} amount_buy:{amount_buy} '
                 f'price_buy_fiat:{price_buy_fiat}')
@@ -44,5 +45,6 @@ class ModelCash:
                                   amount_buy=amount_buy,
                                   price_buy_fiat=price_buy_fiat)
             logging.info(f'Новый счет ID:{id_cash}')
+            return id_cash
         except Exception as err:
             raise ExceptionInsert(cls.__name_model, str(err))
