@@ -13,7 +13,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        logging.FileHandler("debug.log"),
+        logging.FileHandler("telegram_bot/debug.log"),
         logging.StreamHandler(sys.stdout)
     ]
 )
@@ -21,9 +21,9 @@ logging.basicConfig(
 
 if __name__ == '__main__':
     try:
-        #ModelCoin.test_coin('SOL')
-        ModelSafeuser.test_safe(1, 2)
-        #ModelCash.add_cash(1, 'ETH', 1.0, 10300.0)
+        #ModelCoin.test('SOL')
+        ModelSafeuser.test(1, 2)
+        #ModelCash.add(1, 'ETH', 1.0, 10300.0)
 
     except Exception as e:
         print(str(e))

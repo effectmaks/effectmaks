@@ -18,7 +18,7 @@ class ModelCoin:
     __name_model = 'coin'
 
     @classmethod
-    def __check_coin(cls, name: str) -> bool:
+    def __check(cls, name: str) -> bool:
         """
         Проверка есть ли такая монета
         """
@@ -37,7 +37,7 @@ class ModelCoin:
             raise ExceptionSelect(cls.__name_model, str(err))
 
     @classmethod
-    def __create_coin(cls, name: str):
+    def __create(cls, name: str):
         """
         Добавляет монету в базу
         """
@@ -47,13 +47,13 @@ class ModelCoin:
             raise ExceptionInsert(cls.__name_model, str(err))
 
     @classmethod
-    def test_coin(cls, name: str):
+    def test(cls, name: str):
         """
         Проверка есть ли такая монета.
         Если монеты нет, создаем.
         """
         logging.info(f'Проверка есть монета: {name}')
-        have_coin = cls.__check_coin(name)
+        have_coin = cls.__check(name)
         if have_coin:
             return
-        cls.__create_coin(name)
+        cls.__create(name)

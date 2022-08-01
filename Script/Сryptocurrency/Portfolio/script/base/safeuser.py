@@ -23,7 +23,7 @@ class ModelSafeuser:
     __name_model = 'safeuser'
 
     @classmethod
-    def __check_safe(cls, id_user: int, id_safe: int) -> bool:
+    def __check(cls, id_user: int, id_safe: int) -> bool:
         """
         Проверка есть сейф у юзера
         """
@@ -43,7 +43,7 @@ class ModelSafeuser:
             raise ExceptionSelect(cls.__name_model, str(err))
 
     @classmethod
-    def __create_safe(cls, id_user: int, id_safe: int) -> int:
+    def __create(cls, id_user: int, id_safe: int) -> int:
         """
         Прикрепление сейфа к юзеру
         :param id_safe: ID сейфа
@@ -60,13 +60,13 @@ class ModelSafeuser:
             raise ExceptionInsert(cls.__name_model, str(err))
 
     @classmethod
-    def test_safe(cls, id_user: int, id_safe: int):
+    def test(cls, id_user: int, id_safe: int):
         """
         Проверка есть ли такой сейф у юзера.
         Если сейфа нет - прикрепляем.
         """
         logging.info(f'Проверка наличия ID сейф:{id_safe} у ID юзер:{id_user}')
-        have_safe = cls.__check_safe(id_user, id_safe)
+        have_safe = cls.__check(id_user, id_safe)
         if have_safe:
             return
-        cls.__create_safe(id_user, id_safe)
+        cls.__create(id_user, id_safe)

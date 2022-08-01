@@ -24,7 +24,7 @@ class ModelCash:
     __name_model = 'cash'
 
     @classmethod
-    def add_cash(cls, id_safe: int, coin: str, amount_buy: float, price_buy_fiat: float):
+    def add(cls, id_safe: int, coin: str, amount_buy: float, price_buy_fiat: float):
         """
         Добавление счета монеты
         :param id_safe: ID сейфа
