@@ -15,6 +15,6 @@ class SimpleDate:
     @classmethod
     def convert(cls, date_time_str: str) -> datetime:
         try:
-            return datetime.strptime(date_time_str, '%d.%m.%y %H:%M:%S')
+            return datetime.strptime(date_time_str, '%d.%m.%y %H.%M.%S')
         except Exception as err:
             raise ExceptionSimpleDate(f'Ошибка конвертации даты и времени {str(err)}')
