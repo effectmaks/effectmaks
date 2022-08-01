@@ -26,7 +26,7 @@ class ModelCash:
     @classmethod
     def add(cls, id_safe: int, date_time_str: str, coin: str, amount_buy: float, price_buy_fiat: float) -> int:
         """
-        Добавление счета монеты.
+        Добавление счета покупки/конвертирование монеты(средства).
         Исключения: конвертации даты, добавления записи.
         :param id_safe: ID сейфа
         :param date_time_str: Дата и время добавления

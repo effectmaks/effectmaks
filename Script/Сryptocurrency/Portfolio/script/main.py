@@ -3,6 +3,8 @@ import sys
 from base.coin import ModelCoin
 from base.cash import ModelCash
 from base.safeuser import ModelSafeuser
+from base.eventbank import ModelEventBank
+from base.cashsell import ModelCashSell
 
 import os
 from telebot import TeleBot
@@ -22,9 +24,10 @@ logging.basicConfig(
 if __name__ == '__main__':
     try:
         #ModelCoin.test('SOL')
-        ModelSafeuser.test(1, 2)
-        #ModelCash.add(1, 'ETH', 1.0, 10300.0)
-
+        #ModelSafeuser.test(1, 2)
+        id_cash = ModelCash.add(1, '01.08.22 10.00.00', 'ETH', 1.0, 10300.0)
+        id_cash_sell = ModelCashSell.add(1, '01.08.22 10.00.00', id_cash, 1.0, 10300.0)
+        ModelEventBank.add(1, '01.08.22 10.00.00', 1.0, 0.002, id_cash_sell=id_cash_sell)
     except Exception as e:
         print(str(e))
 
