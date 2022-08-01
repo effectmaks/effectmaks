@@ -1,7 +1,7 @@
 import logging
 from peewee import DateTimeField, IntegerField, DoubleField, TextField, Model
 from .sqlite.connectSqlite import ConnectSqlite, ExceptionInsert
-from datetime import datetime
+from ..business_model.simpleDate import SimpleDate
 
 
 class Cash(Model):
@@ -9,7 +9,7 @@ class Cash(Model):
     База данных таблица Счета в сейфе
     """
     id = IntegerField()
-    date_time = DateTimeField(default=datetime.now())
+    date_time = DateTimeField()
     id_safe = IntegerField()
     coin = TextField()
     amount_buy = DoubleField(default=0)
@@ -24,7 +24,7 @@ class ModelCash:
     __name_model = 'cash'
 
     @classmethod
-    def add(cls, id_safe: int, coin: str, amount_buy: float, price_buy_fiat: float):
+    def add(cls, id_safe: int, date_time_str: str, coin: str, amount_buy: float, price_buy_fiat: float):
         """
         Добавление счета монеты
         :param id_safe: ID сейфа
@@ -32,15 +32,17 @@ class ModelCash:
         :param amount_buy: Количество купить
         :param price_buy_fiat: Цена покупки
         """
+
+        logging.info(
+                f'Добавить счет id_safe:{id_safe} date_time:{date_time_str} coin:{coin} amount_buy:{amount_buy} '
+                f'price_buy_fiat:{price_buy_fiat}')
+        date_time_obj = SimpleDate.convert(date_time_str)  # Вызывает исключение при неправильной конвертации
         try:
-            logging.info(f'Добавить счет id_safe:{id_safe} coin:{coin} amount_buy:{amount_buy} '
-                         f'price_buy_fiat:{price_buy_fiat}')
             id_cash = Cash.create(id_safe=id_safe,
-                        coin=coin,
-                        amount_buy=amount_buy,
-                        price_buy_fiat=price_buy_fiat)
+                                  date_time=date_time_obj,
+                                  coin=coin,
+                                  amount_buy=amount_buy,
+                                  price_buy_fiat=price_buy_fiat)
             logging.info(f'Новый счет ID:{id_cash}')
         except Exception as err:
             raise ExceptionInsert(cls.__name_model, str(err))
-
-
