@@ -10,11 +10,11 @@ class EventBank(Model):
     """
     id = IntegerField()
     date_time = DateTimeField()
-    id_cash = IntegerField()
-    id_sell = IntegerField()
     amount = DoubleField()
     price_avr_fiat = DoubleField()
     fee = DoubleField()
+    id_cash = IntegerField()
+    id_cash_sell = IntegerField()
 
     class Meta:
         table_name = 'event_bank'
@@ -25,7 +25,8 @@ class ModelEventBank:
     __name_model = 'cash'
 
     @classmethod
-    def add(cls, id_safe: int, date_time_str: str, amount: float, price_avr_fiat: float, id_cash: int = 0, id_cash_sell: int = 0) -> int:
+    def add(cls, id_safe: int, date_time_str: str, amount: float, price_avr_fiat: float, id_cash: int = 0,
+            id_cash_sell: int = 0) -> int:
         """
         Добавление события банка.
         Исключения: конвертации даты, добавления записи.
