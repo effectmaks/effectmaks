@@ -1,5 +1,5 @@
 import logging
-from peewee import DateTimeField, IntegerField, DoubleField, Model
+from peewee import DateTimeField, IntegerField, DoubleField, TextField, Model
 from .sqlite.connectSqlite import ConnectSqlite, ExceptionInsert
 from business_model.simpledate import SimpleDate
 
@@ -15,18 +15,19 @@ class EventBank(Model):
     fee = DoubleField()
     id_cash = IntegerField()
     id_cash_sell = IntegerField()
+    comment = TextField()
 
     class Meta:
-        table_name = 'event_bank'
+        table_name = 'eventbank'
         database = ConnectSqlite.get_connect()
 
 
 class ModelEventBank:
-    __name_model = 'cash'
+    __name_model = 'eventbank'
 
     @classmethod
     def add(cls, id_safe: int, date_time_str: str, amount: float, price_avr_fiat: float, id_cash: int = 0,
-            id_cash_sell: int = 0) -> int:
+            id_cash_sell: int = 0, comment: str = '') -> int:
         """
         Добавление события банка.
         Исключения: конвертации даты, добавления записи.
@@ -36,6 +37,7 @@ class ModelEventBank:
         :param price_avr_fiat:
         :param id_cash:
         :param id_cash_sell:
+        :param comment:
         :return:
         """
 
@@ -48,6 +50,7 @@ class ModelEventBank:
                                         date_time=date_time_obj,
                                         id_cash=id_cash,
                                         id_cash_sell=id_cash_sell,
+                                        comment=comment,
                                         amount=amount,
                                         price_avr_fiat=price_avr_fiat)
             logging.info(f'Новое событие банка ID:{id_event}')
