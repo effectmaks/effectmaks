@@ -43,7 +43,8 @@ class ModelEventBank:
 
         logging.info(
             f'Добавление события банка id_safe:{id_safe} date_time:{date_time_str} '
-            f'amount:{amount} price_avr_fiat:{price_avr_fiat} id_cash:{id_cash} id_cash_sell:{id_cash_sell}')
+            f'amount:{amount} price_avr_fiat:{price_avr_fiat} id_cash:{id_cash} '
+            f'id_cash_sell:{id_cash_sell} id_cash_sell:{comment}')
         date_time_obj = SimpleDate.convert(date_time_str)  # Вызывает исключение при неправильной конвертации
         try:
             id_event = EventBank.create(id_safe=id_safe,
