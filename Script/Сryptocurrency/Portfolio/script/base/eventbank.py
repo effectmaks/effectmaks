@@ -10,12 +10,12 @@ class EventBank(Model):
     """
     id = IntegerField()
     date_time = DateTimeField()
-    amount = DoubleField()
-    price_avr_fiat = DoubleField()
-    fee = DoubleField()
-    id_cash = IntegerField()
+    id_cash_buy = IntegerField()
     id_cash_sell = IntegerField()
     comment = TextField()
+    fee = DoubleField()
+    id_task = IntegerField()
+    type = TextField()
 
     class Meta:
         table_name = 'eventbank'
@@ -26,34 +26,34 @@ class ModelEventBank:
     __name_model = 'eventbank'
 
     @classmethod
-    def add(cls, id_safe: int, date_time_str: str, amount: float, price_avr_fiat: float, id_cash: int = 0,
-            id_cash_sell: int = 0, comment: str = '') -> int:
+    def add(cls, id_task: int, type: str, date_time_str: str, id_cash_buy: int = 0,
+            id_cash_sell: int = 0, fee: float = '', comment: str = '') -> int:
         """
-        Добавление события банка.
+        Добавление события банка. Конвертация, ввод и вывод из системы.
         Исключения: конвертации даты, добавления записи.
-        :param id_safe:
+        :param id_task:
+        :param type:
         :param date_time_str:
-        :param amount:
-        :param price_avr_fiat:
-        :param id_cash:
+        :param id_cash_buy:
         :param id_cash_sell:
         :param comment:
+        :param fee:
         :return:
         """
 
         logging.info(
-            f'Добавление события банка id_safe:{id_safe} date_time:{date_time_str} '
-            f'amount:{amount} price_avr_fiat:{price_avr_fiat} id_cash:{id_cash} '
-            f'id_cash_sell:{id_cash_sell} id_cash_sell:{comment}')
+            f'Добавление события банка id_task:{id_task} type:{type} '
+            f'date_time_str:{date_time_str} id_cash_buy:{id_cash_buy} id_cash_sell:{id_cash_sell} '
+            f'fee:{fee} comment:{comment}')
         date_time_obj = SimpleDate.convert(date_time_str)  # Вызывает исключение при неправильной конвертации
         try:
-            id_event = EventBank.create(id_safe=id_safe,
+            id_event = EventBank.create(id_task=id_task,
+                                        type=type,
                                         date_time=date_time_obj,
-                                        id_cash=id_cash,
+                                        id_cash_buy=id_cash_buy,
                                         id_cash_sell=id_cash_sell,
-                                        comment=comment,
-                                        amount=amount,
-                                        price_avr_fiat=price_avr_fiat)
+                                        fee=fee,
+                                        comment=comment)
             logging.info(f'Новое событие банка ID:{id_event}')
             return id_event
         except Exception as err:
