@@ -2,6 +2,7 @@ import logging
 from peewee import DateTimeField, IntegerField, Model, fn
 from .sqlite.connectSqlite import ConnectSqlite, ExceptionInsert, ExceptionSelect
 from datetime import datetime
+from .safelist import Safelist
 
 
 class Safeuser(Model):
@@ -22,51 +23,69 @@ class Safeuser(Model):
 class ModelSafeuser:
     __name_model = 'safeuser'
 
-    @classmethod
-    def __check(cls, id_user: int, id_safe: int) -> bool:
+    def __init__(self, id_user: int):
+        self._safes_user = None
+        self._id_user = id_user
+
+    def __check(self, id_safe: int) -> bool:
         """
         Проверка есть сейф у юзера
         """
         try:
-            list_safe = Safeuser.select(fn.COUNT(Safeuser.id).alias('count_safe')).where(Safeuser.id_safe == id_safe, Safeuser.id_user == id_user)
+            list_safe = Safeuser.select(fn.COUNT(Safeuser.id).alias('count_safe')).\
+                where(Safeuser.id_safe == id_safe,Safeuser.id_user == self._id_user)
             for sel in list_safe:
                 if sel.count_safe == 1:
-                    logging.warning(f'В таблице {cls.__name_model} у ID юзера:{id_user} уже есть ID сейф:{id_safe}')
+                    logging.warning(f'В таблице {self.__name_model} у ID юзера:{self._id_user} '
+                                    f'уже есть ID сейф:{id_safe}')
                     return True  # сейф есть
                 elif sel.count_safe > 1:
-                    logging.warning(f'В таблице {cls.__name_model} у ID юзера:{id_user} больше одного '
+                    logging.warning(f'В таблице {self.__name_model} у ID юзера:{self._id_user} больше одного '
                                     f'ID сейф:{id_safe} = {sel.count_safe} шт.')
                     return True  # сейфы есть
                 return False  # цикл дальше продолжать не надо
             return False  # пустой ответ на запрос - сейфов нет
         except Exception as err:
-            raise ExceptionSelect(cls.__name_model, str(err))
+            raise ExceptionSelect(self.__name_model, str(err))
 
-    @classmethod
-    def __create(cls, id_user: int, id_safe: int) -> int:
+    def __create(self, id_safe: int) -> int:
         """
         Прикрепление сейфа к юзеру
         :param id_safe: ID сейфа
-        :param coin: Монета
-        :param amount_buy: Количество купить
-        :param price_buy_fiat: Цена покупки
         """
         try:
             id_safe_user = Safeuser.create(id_safe=id_safe,
-                                        id_user=id_user)
-            logging.info(f'Прикреплен ID сейф юзера:{id_safe_user} id_safe:{id_safe} id_user:{id_user}')
+                                           id_user=self._id_user)
+            logging.info(f'Прикреплен ID сейф юзера:{id_safe_user} id_safe:{id_safe} id_user:{self._id_user}')
             return id_safe_user
         except Exception as err:
-            raise ExceptionInsert(cls.__name_model, str(err))
+            raise ExceptionInsert(self.__name_model, str(err))
 
-    @classmethod
-    def test(cls, id_user: int, id_safe: int):
+    def test(self, id_safe: int):
         """
         Проверка есть ли такой сейф у юзера.
         Если сейфа нет - прикрепляем.
         """
-        logging.info(f'Проверка наличия ID сейф:{id_safe} у ID юзер:{id_user}')
-        have_safe = cls.__check(id_user, id_safe)
+        logging.info(f'Проверка наличия ID сейф:{id_safe} у ID юзер:{self._id_user}')
+        have_safe = self.__check(id_safe)
         if have_safe:
             return
-        cls.__create(id_user, id_safe)
+        self.__create(id_safe)
+
+    def get_dict(self) -> dict:
+        """
+        Выгрузить все сейфы юзера
+        """
+        dict_out = {}
+        try:
+            print('2525')
+            self._safes_user = Safeuser.select(Safeuser.id, Safelist.name).join(Safelist, on=(Safelist.id == Safeuser.id_safe)).where(Safeuser.id_user == self._id_user)
+            print(self._safes_user)
+            if self._safes_user:
+                for sel in self._safes_user:
+                    dict_out[sel.id] = sel.safelist.name
+                return dict_out
+            else:
+                logging.warning(f'В таблице {self.__name_model} у ID юзера:{self._id_user} нет сейфов.')
+        except Exception as err:
+            raise ExceptionSelect(self.__name_model, str(err))
