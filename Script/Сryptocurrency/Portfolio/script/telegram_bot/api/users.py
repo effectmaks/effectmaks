@@ -34,7 +34,7 @@ class Users:
             user = Users(bot_telegram, message.from_user.id)
             cls.dict_users[message.from_user.id] = user
         try:
-            user.control_bot.new_message(message)
+            user.control_bot.new_message(message.text)
         except Exception as ex:
             logging.error(f'Серьезная ошибка в обработке данных {str(ex)}')
             cls.dict_users.pop(message.from_user.id, None)
