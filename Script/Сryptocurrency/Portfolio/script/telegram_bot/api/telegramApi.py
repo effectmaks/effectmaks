@@ -33,6 +33,9 @@ class ConnectTelebot:
         self.__telebot.send_message(self.__id_user, text=text_send, disable_web_page_preview=True)
         logging.info('Отправлено')
 
+    @property
+    def id_user(self):
+        return self.__id_user
 
 
 
