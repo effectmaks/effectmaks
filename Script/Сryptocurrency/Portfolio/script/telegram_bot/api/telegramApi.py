@@ -1,5 +1,5 @@
 import logging
-from telebot import TeleBot
+from telebot import TeleBot, types
 
 
 class ExceptionTelegramApi(Exception):
@@ -25,18 +25,34 @@ class Message:
 
 class ConnectTelebot:
     def __init__(self, telebot: TeleBot, id_user: int):
-        self.__telebot = telebot
-        self.__id_user = id_user
+        self._telebot = telebot
+        self._id_user = id_user
 
     def send_text(self, text_send: str):
-        logging.info(f'Отправить текст юзеру ID {self.__id_user}: "{text_send}"')
-        self.__telebot.send_message(self.__id_user, text=text_send, disable_web_page_preview=True)
+        logging.info(f'Отправить текст юзеру ID {self._id_user}: "{text_send}"')
+        self._telebot.send_message(self._id_user, text=text_send, disable_web_page_preview=True)
         logging.info('Отправлено')
 
     @property
     def id_user(self):
-        return self.__id_user
+        return self._id_user
 
+    def view_keyboard(self, text_keyboard: str, list_name: list = None, dict_name: dict = None):
+        """
+        Создание списка кнопок для юзера
+        :param dict_text: Словарь с названиями кнопок
+        :param text_keyboard: Вопрос для пользователя
+        """
+        keyboard = types.InlineKeyboardMarkup()  # клавиатура
+        if list_name:
+            for value in list_name:
+                key = types.InlineKeyboardButton(text=value, callback_data=value)
+                keyboard.add(key)  # добавляем кнопку
+        else:
+            for value in dict_name.values():
+                key = types.InlineKeyboardButton(text=value, callback_data=value)
+                keyboard.add(key)  # добавляем кнопку
+        self._telebot.send_message(self._id_user, text=text_keyboard, reply_markup=keyboard)
 
 
 

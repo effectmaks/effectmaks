@@ -48,7 +48,7 @@ class Users:
         :param message:
         :return:
         """
-        message = Message(id=call.from_user.id, text=call.data)
+        message = Message(call.from_user.id, call.data)
         bot_telegram.edit_message_reply_markup(message.from_user.id, call.message.id)  # удалить клавиатуру
         bot_telegram.send_message(call.from_user.id, message.text)  # отправить текст выбранной кнопки
         Users.message_info(bot_telegram, message)
