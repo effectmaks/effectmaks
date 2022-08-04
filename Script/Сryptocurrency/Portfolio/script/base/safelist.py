@@ -8,6 +8,19 @@ class Safetypes:
     WALLET = 'WALLET'
     STAKING = 'STAKING'
 
+    @classmethod
+    def get_list(cls) -> list:
+        """
+        :return: Лист с типами сейфов.
+        """
+        return [cls.EXCHANGE, cls.WALLET, cls.STAKING]
+
+    @classmethod
+    def check(cls, type_name: str) -> bool:
+        if type_name in [cls.EXCHANGE, cls.WALLET, cls.STAKING]:
+            return True
+        logging.warning(f'В Safetypes нет типа: {type_name}.')
+
 
 class Safelist(Model):
     """
