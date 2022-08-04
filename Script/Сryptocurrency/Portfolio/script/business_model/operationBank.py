@@ -26,7 +26,7 @@ class OperationBank:
         if self._work_next_function(message_str):  # функция выполнилась
             return
         if self._command_now == ModesWork.COMMAND_INPUT:
-            self._input_exhange_type(message_str)
+            self._input_exchange_type(message_str)
 
     def _set_next_function(self, fnc):
         """
@@ -49,25 +49,25 @@ class OperationBank:
                 self._add_next_function = False
             return True  # Выполнилась функция
 
-    def _input_exhange_type(self, message_str: str):
+    def _input_exchange_type(self, message_str: str):
         list_name: list = Safetypes.get_list()
         self._connect_telebot.view_keyboard('Выберите тип сейфа:', list_name=list_name)
-        self._set_next_function(self._input_exhange_type_check)
+        self._set_next_function(self._input_exchange_type_check)
 
-    def _input_exhange_type_check(self, message_str: str):
+    def _input_exchange_type_check(self, message_str: str):
         if Safetypes.check(message_str):
-            self._input_exhange(message_str)
+            self._input_exchange(message_str)
         else:
             self._connect_telebot.send_text('Выбран неправильный тип сейфа.')
             raise ExceptionOperationBank(f'Выбран не правильный тип сейфа - {message_str}')
 
-    def _input_exhange(self, message_str: str):
+    def _input_exchange(self, message_str: str):
         safes_dict = ModelSafeuser.get_dict(self._connect_telebot.id_user, type_name=message_str)
         if not safes_dict:
             safes_dict = {}
         safes_dict['ДОБАВИТЬ'] = 'ДОБАВИТЬ'
         self._connect_telebot.view_keyboard('Выберите сейф:', dict_name=safes_dict)
-        self._set_next_function(self._input_exhange_check)
+        self._set_next_function(self._input_exchange_check)
 
-    def _input_exhange_check(self, message_str: str):
+    def _input_exchange_check(self, message_str: str):
         self._connect_telebot.send_text(f'Введите 2')
