@@ -5,6 +5,14 @@ from datetime import datetime
 from .safelist import Safelist
 
 
+class ExceptionSafeuser(Exception):
+    def __init__(self, name_table: str = '', err_message: str = "", err_script_message: str = ''):
+        err_message = f'Ошибка {err_message} в таблице {name_table}'
+        logging.error(err_message)
+        logging.error(err_script_message)
+        super().__init__(err_message)
+
+
 class Safeuser(Model):
     """
     База данных таблица Сейф.
@@ -30,7 +38,7 @@ class ModelSafeuser:
         """
         try:
             list_safe = Safeuser.select(fn.COUNT(Safeuser.id).alias('count_safe')).\
-                where(Safeuser.id_safe == id_safe,Safeuser.id_user == id_user)
+                where(Safeuser.id_safe == id_safe, Safeuser.id_user == id_user)
             for sel in list_safe:
                 if sel.count_safe == 1:
                     logging.warning(f'В таблице {cls.__name_model} у ID юзера:{id_user} '
@@ -54,13 +62,13 @@ class ModelSafeuser:
         try:
             id_safe_user = Safeuser.create(id_safe=id_safe,
                                            id_user=id_user)
-            logging.info(f'Прикреплен ID сейф юзера:{id_safe_user} id_safe:{id_safe} id_user:{id_user}')
+            logging.info(f'Создан id_safe_user:{id_safe_user} id_user:{id_user} id_safe_list:{id_safe} ')
             return id_safe_user
         except Exception as err:
             raise ExceptionInsert(cls.__name_model, str(err))
 
     @classmethod
-    def test(cls, id_user: int, id_safe: int):
+    def command_create(cls, id_user: int, id_safe: int) -> int:
         """
         Проверка есть ли такой сейф у юзера.
         Если сейфа нет - прикрепляем.
@@ -68,8 +76,10 @@ class ModelSafeuser:
         logging.info(f'Проверка наличия ID сейф:{id_safe} у ID юзер:{id_user}')
         have_safe = cls.__check(id_user, id_safe)
         if have_safe:
-            return
-        cls.__create(id_user, id_safe)
+            raise ExceptionSafeuser(cls.__name_model, "Уже была проверка, и сейфа не должно быть!")
+        else:
+            logging.info("Сейфа нет.")
+        return cls.__create(id_user, id_safe)
 
     @classmethod
     def get_dict(cls, id_user: int, type_name: str) -> dict:
@@ -83,7 +93,7 @@ class ModelSafeuser:
                                        .where(Safeuser.id_user == id_user, Safelist.type == type_name)
             if safes_user:
                 for sel in safes_user:
-                    dict_out[sel.id] = sel.safelist.name
+                    dict_out[sel.safelist.name] = sel.id
                 return dict_out
             else:
                 logging.warning(f'В таблице {cls.__name_model} у ID юзера:{id_user} тип {type_name} нет сейфов.')
