@@ -62,6 +62,6 @@ class ModelCash:
                     list_out.append(cash.coin)
                 return list_out
             else:
-                logging.warning(f'В таблице {cls.__name_model} у сейфа ID:{id_safe_user} не было никогда монет.')
+                logging.info(f'В таблице {cls.__name_model} у сейфа ID:{id_safe_user} не было никогда монет.')
         except Exception as err:
             raise ExceptionSelect(cls.__name_model, str(err))
