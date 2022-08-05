@@ -41,7 +41,7 @@ class ModelSafeuser:
                 where(Safeuser.id_safe == id_safe, Safeuser.id_user == id_user)
             for sel in list_safe:
                 if sel.count_safe == 1:
-                    logging.warning(f'В таблице {cls.__name_model} у ID юзера:{id_user} '
+                    logging.info(f'В таблице {cls.__name_model} у ID юзера:{id_user} '
                                     f'уже есть ID сейф:{id_safe}')
                     return True  # сейф есть
                 elif sel.count_safe > 1:
