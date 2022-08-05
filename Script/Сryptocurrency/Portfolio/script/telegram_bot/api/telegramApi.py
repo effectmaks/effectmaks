@@ -49,7 +49,7 @@ class ConnectTelebot:
                 key = types.InlineKeyboardButton(text=value, callback_data=value)
                 keyboard.add(key)  # добавляем кнопку
         else:
-            for value in dict_name.values():
+            for value in dict_name.keys():
                 key = types.InlineKeyboardButton(text=value, callback_data=value)
                 keyboard.add(key)  # добавляем кнопку
         self._telebot.send_message(self._id_user, text=text_keyboard, reply_markup=keyboard)
