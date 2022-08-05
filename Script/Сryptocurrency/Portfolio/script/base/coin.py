@@ -26,7 +26,7 @@ class ModelCoin:
             list_coin = Coin.select(fn.COUNT(Coin.name).alias('count_name')).where(Coin.name == name)
             for sel in list_coin:
                 if sel.count_name == 1:
-                    logging.warning(f'В таблице {cls.__name_model} уже есть монета {name}')
+                    logging.info(f'В таблице {cls.__name_model} уже есть монета {name}')
                     return True  # монета есть
                 elif sel.count_name > 1:
                     logging.warning(f'В таблице {cls.__name_model} больше одной монеты {name} = {sel.count_name} шт.')
@@ -47,13 +47,30 @@ class ModelCoin:
             raise ExceptionInsert(cls.__name_model, str(err))
 
     @classmethod
-    def test(cls, name: str):
+    def command_create(cls, name: str):
         """
         Проверка есть ли такая монета.
         Если монеты нет, создаем.
         """
-        logging.info(f'Проверка есть монета: {name}')
+        logging.info(f'Проверка есть ли монета: {name}?')
         have_coin = cls.__check(name)
         if have_coin:
             return
         cls.__create(name)
+
+    @classmethod
+    def get_list(cls) -> list:
+        """
+        Выгрузить все монеты
+        """
+        list_out = []
+        try:
+            coin_select = Coin.select().order_by(Coin.name)
+            if coin_select:
+                for coin in coin_select:
+                    list_out.append(coin.name)
+                return list_out
+            else:
+                logging.warning(f'В таблице {cls.__name_model} нет монет.')
+        except Exception as err:
+            raise ExceptionSelect(cls.__name_model, str(err))
