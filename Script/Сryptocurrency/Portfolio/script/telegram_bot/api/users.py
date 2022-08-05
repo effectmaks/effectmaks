@@ -26,6 +26,7 @@ class Users:
         :param message:
         :return:
         """
+        logging.info('>>>||')
         user = cls.dict_users.get(message.from_user.id, None)
         if user:
             logging.info(f'Новое сообщение id_user:{message.from_user.id}')
@@ -38,6 +39,7 @@ class Users:
         except Exception as ex:
             logging.error(f'Серьезная ошибка в обработке данных {str(ex)}')
             cls.dict_users.pop(message.from_user.id, None)
+        logging.info('||>>>')
 
     @classmethod
     def button_info(cls, bot_telegram: TeleBot, call):
