@@ -1,6 +1,6 @@
 import logging
 from peewee import DateTimeField, IntegerField, DoubleField, TextField, Model
-from .sqlite.connectSqlite import ConnectSqlite, ExceptionInsert
+from .sqlite.connectSqlite import ConnectSqlite, ExceptionInsert, ExceptionSelect
 from business_model.simpledate import SimpleDate
 
 
@@ -10,7 +10,7 @@ class Cash(Model):
     """
     id = IntegerField()
     date_time = DateTimeField()
-    id_safe = IntegerField()
+    id_safe_user = IntegerField()
     coin = TextField()
     amount_buy = DoubleField(default=0)
     price_buy_fiat = DoubleField(default=0)
@@ -48,3 +48,20 @@ class ModelCash:
             return id_cash
         except Exception as err:
             raise ExceptionInsert(cls.__name_model, str(err))
+
+    @classmethod
+    def get_cash_coin(cls, id_safe_user: int) -> list:
+        """
+        Выгрузить все монеты счетов юзера у сейфа
+        """
+        list_out = []
+        try:
+            cashes_user = Cash.select(Cash.coin).distinct().where(Cash.id_safe_user == id_safe_user)
+            if cashes_user:
+                for cash in cashes_user:
+                    list_out.append(cash.coin)
+                return list_out
+            else:
+                logging.warning(f'В таблице {cls.__name_model} у сейфа ID:{id_safe_user} не было никогда монет.')
+        except Exception as err:
+            raise ExceptionSelect(cls.__name_model, str(err))
