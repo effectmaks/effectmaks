@@ -18,6 +18,7 @@ class Safetypes:
     @classmethod
     def check(cls, type_name: str) -> bool:
         if type_name in [cls.EXCHANGE, cls.WALLET, cls.STAKING]:
+            logging.info(f'Сейф с типом "{type_name}" есть в базе.')
             return True
         logging.warning(f'В Safetypes нет типа: {type_name}.')
 
