@@ -32,6 +32,8 @@ class OperationBank:
         self._TYPE_USD = 'USD'
         self._choice_coin: str
         self._coin_list = []
+        self._choice_coin: str
+        self._choice_amount: str
 
 
     def work(self, message_str: str):
@@ -45,6 +47,7 @@ class OperationBank:
         Устанавливает следующая функция для вызова, когда придет новое сообщение
         :param fnc: Следующая функция для вызова
         """
+        logging.info(f'Следующая функция {fnc.__name__}')
         self._next_function = fnc
         self._add_next_function = True
 
@@ -189,6 +192,39 @@ class OperationBank:
         self._input_amount_question()
 
     def _input_amount_question(self):
+        """
+        Режим вопроса, какой объем пополняется?
+        """
         logging.info(f'Режим вопроса объем пополнения')
         self._connect_telebot.send_text(f'Введите объем пополнения:')
+        self._set_next_function(self._input_amount_answer)
 
+    def _input_amount_answer(self, message_str: str):
+        """
+        Проверка объема пополнения пользователя
+        :param message_str: Ответ пользователя
+        :return:
+        """
+        logging.info(f'Режим проверки объема пополнения')
+        amount = self._isfloat(message_str)
+        if amount:
+            self._choice_amount = amount
+            logging.info(f'Выбрано число - {self._choice_amount}')
+            self._input_create_task()
+        else:
+            self._connect_telebot.send_text('Невозможно преобразовать число.')
+            raise ExceptionOperationBank(f'Невозможно преобразовать число - {message_str}')
+
+    def _isfloat(self, value_str: str) -> float:
+        try:
+            value_str = value_str.replace(',', '.')
+            return float(value_str)
+        except ValueError:
+            pass
+
+    def _input_create_task(self):
+        """
+        Создание задания на создание счета юзера
+        """
+        logging.info(f'Создание задания на создание счета юзера')
+        self._connect_telebot.send_text(f'Временный стоп, нужно добавить комментарии, коммисия, дата_время')
