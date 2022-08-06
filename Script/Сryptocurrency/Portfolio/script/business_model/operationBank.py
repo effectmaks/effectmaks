@@ -36,7 +36,8 @@ class OperationBank:
         self._choice_coin: str
         self._coin_list = []
         self._choice_coin: str
-        self._choice_amount: str
+        self._choice_amount: float
+        self._choice_fee: float
 
 
     def work(self, message_str: str):
@@ -190,7 +191,7 @@ class OperationBank:
 
     def _create_coin_question(self):
         """
-        Вопрос - какое имя монеты создавать?
+        Режим вопрос - какое имя монеты создавать?
         """
         logging.info(f'Режим создания монеты.')
         coin_list = ModelCoin.get_list()
@@ -219,7 +220,7 @@ class OperationBank:
 
     def _input_amount_answer(self, message_str: str):
         """
-        Проверка объема пополнения пользователя
+        Режим проверка объема пополнения пользователя
         :param message_str: Ответ пользователя
         :return:
         """
@@ -227,8 +228,8 @@ class OperationBank:
         amount = self._isfloat(message_str)
         if amount:
             self._choice_amount = amount
-            logging.info(f'Выбрано число - {self._choice_amount}')
-            self._input_create_task()
+            logging.info(f'Выбран объем - {self._choice_amount}')
+            self._input_fee_question()
         else:
             self._connect_telebot.send_text('Невозможно преобразовать число.')
             raise ExceptionOperationBank(f'Невозможно преобразовать число - {message_str}')
@@ -240,9 +241,52 @@ class OperationBank:
         except ValueError:
             pass
 
+    def _input_fee_question(self):
+        """
+        Режим вопроса, какая комиссия снялась?
+        """
+        logging.info(f'Режим вопроса комиссия')
+        self._connect_telebot.send_text(f'Введите комиссию:')
+        self._set_next_function(self._input_fee_answer)
+
+    def _input_fee_answer(self, message_str: str):
+        """
+        Режим проверка комиссия пользователя
+        :param message_str: Ответ пользователя
+        :return:
+        """
+        logging.info(f'Режим проверки комиссии')
+        amount = self._isfloat(message_str)
+        if amount:
+            self._choice_fee = amount
+            logging.info(f'Введена комиссия - {self._choice_fee}')
+            self._input_comment_question()
+        else:
+            self._connect_telebot.send_text('Невозможно преобразовать число.')
+            raise ExceptionOperationBank(f'Невозможно преобразовать число - {message_str}')
+
+    def _input_comment_question(self):
+        """
+        Режим вопроса, введите комментарий
+        """
+        logging.info(f'Режим ввода комментария')
+        self._connect_telebot.send_text(f'Введите комментарий:')
+        self._set_next_function(self._input_comment_answer)
+
+    def _input_comment_answer(self, message_str: str):
+        """
+        Проверка комментария
+        :param message_str: Ответ пользователя
+        :return:
+        """
+        logging.info(f'Режим проверки комментария')
+        self._choice_comment = message_str
+        logging.info(f'Выбран комментарий - "{self._choice_comment}"')
+        self._input_create_task()
+
     def _input_create_task(self):
         """
         Создание задания на создание счета юзера
         """
         logging.info(f'Создание задания на создание счета юзера')
-        self._connect_telebot.send_text(f'Временный стоп, нужно добавить комментарии, коммисия')
+        self._connect_telebot.send_text(f'Временный стоп')
