@@ -1,7 +1,8 @@
 import logging
 from peewee import DateTimeField, IntegerField, DoubleField, TextField, Model
-from .sqlite.connectSqlite import ConnectSqlite, ExceptionInsert
+from .sqlite.connectSqlite import ConnectSqlite, ExceptionInsert, ExceptionSelect, ExceptionDelete
 from business_model.simpledate import SimpleDate
+from .task import Task, TaskStatus
 
 
 class EventBank(Model):
@@ -58,3 +59,51 @@ class ModelEventBank:
             return id_event
         except Exception as err:
             raise ExceptionInsert(cls.__name_model, str(err))
+
+    @classmethod
+    def delete_task_run(cls, id_task: int = 0):
+        """
+        Команда удалить все запущенные задания - Task.status == TaskStatus.RUN.
+        :param id_user:
+        """
+        logging.info(f'Команда удалить все запущенные задания из {cls.__name_model}.')
+        must_delete: bool = cls._view_delete_task(id_task)
+        if must_delete:
+            cls._must_delete_task(id_task)
+        else:
+            logging.info('Удаление не требуется.')
+
+    @classmethod
+    def _view_delete_task(cls, id_task: int = 0) -> bool:
+        """
+        Показать в логировании, что будем удалять - Task.status == TaskStatus.RUN
+        :param id_user: ID юзера
+        :return: True - есть что удалить.
+        """
+        must_delete: bool = False
+        logging.info('Показать, что будет удалено.')
+        try:
+            bank_list = EventBank.select().where(EventBank.id_task == id_task)
+            for bank in bank_list:
+                logging.info(f'Будет удалено в таблице {cls.__name_model}: {bank.id_task} type:{bank.type} '
+                    f'date_time_str:{bank.date_time} id_cash_buy:{bank.id_cash_buy} id_cash_sell:{bank.id_cash_sell} '
+                    f'fee:{bank.fee} comment:{bank.comment}')
+                must_delete = True
+            return must_delete
+        except Exception as err:
+            raise ExceptionSelect(cls.__name_model, str(err))
+
+    @classmethod
+    def _must_delete_task(cls, id_task: int = 0):
+        """
+        Удалить записи - Task.status == TaskStatus.RUN
+        :param id_user: ID юзера
+        :return: True - есть что удалить.
+        """
+        logging.info('Удалить записи со статусом TaskStatus.RUN.')
+        try:
+            command_delete = EventBank.delete().where(EventBank.id_task == id_task)
+            count = command_delete.execute()
+            logging.info(f'Удалены записи в кол-ве - {count} шт.')
+        except Exception as err:
+            raise ExceptionDelete(cls.__name_model, str(err))
