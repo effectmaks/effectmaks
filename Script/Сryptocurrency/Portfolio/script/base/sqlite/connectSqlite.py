@@ -24,6 +24,22 @@ class ExceptionSelect(Exception):
         super().__init__(err_message)
 
 
+class ExceptionDelete(Exception):
+    def __init__(self, name_table: str = '', err_script_message: str = ''):
+        err_message = f'Ошибка удаления записи в таблице {name_table}'
+        logging.error(err_message)
+        logging.error(err_script_message)
+        super().__init__(err_message)
+
+
+class ExceptionUpdate(Exception):
+    def __init__(self, name_table: str = '', err_script_message: str = ''):
+        err_message = f'Ошибка обновления записи в таблице {name_table}'
+        logging.error(err_message)
+        logging.error(err_script_message)
+        super().__init__(err_message)
+
+
 class ConnectSqlite:
     """
     Класс Singleton выдает один и тот же объект
