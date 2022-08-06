@@ -1,3 +1,4 @@
+import datetime
 import logging
 from telegram_bot.api.telegramApi import ConnectTelebot
 from base.safeuser import ModelSafeuser
@@ -5,6 +6,7 @@ from base.safelist import Safetypes, ModelSafelist
 from base.coin import ModelCoin
 from base.cash import ModelCash
 from telegram_bot.api.modesWork import ModesWork
+from .simpledate import SimpleDate
 
 
 class ExceptionOperationBank(Exception):
@@ -23,6 +25,7 @@ class OperationBank:
         self._connect_telebot = connect_telebot
         self._next_function = None
         self._add_next_function = False
+        self._choice_date_time: datetime
         self._choice_safe_type: str
         self._MODE_ADD = 'ДОБАВИТЬ'
         self._dict_safes_user = {}
@@ -40,7 +43,7 @@ class OperationBank:
         if self._work_next_function(message_str):  # функция выполнилась
             return
         if self._command_now == ModesWork.COMMAND_INPUT:
-            self._input_safe_type()
+            self._input_date_time_question()
 
     def _set_next_function(self, fnc):
         """
@@ -64,9 +67,24 @@ class OperationBank:
                 self._add_next_function = False
             return True  # Выполнилась функция
 
+    def _input_date_time_question(self):
+        """
+        Режим вопрос пользователю введите дату и время перевода
+        """
+        self._connect_telebot.send_text('Введите дату и время:')
+        self._set_next_function(self._input_date_time_answer)
+
+    def _input_date_time_answer(self, message_str: str):
+        """
+        Режим проверки даты и времени
+        :param message_str: Ответ юзера
+        """
+        self._choice_date_time = SimpleDate.convert(message_str)
+        self._input_safe_type()
+
     def _input_safe_type(self):
         """
-        Формирование вопроса, на какой тип сейфа хотите пополнить.
+        Режим  формирование вопроса, на какой тип сейфа хотите пополнить.
         """
         logging.info(f'Режим задать вопрос, какой тип сейфа?')
         list_name: list = Safetypes.get_list()
@@ -75,7 +93,7 @@ class OperationBank:
 
     def _input_safe_type_check(self, message_str: str):
         """
-        Проверяет ответ пользователя, по типу сейфа.
+        Режим  проверяет ответ пользователя, по типу сейфа.
         Если правильно выбран, запоминает выбранный тип сейфа.
         :param message_str: Ответ юзера
         """
@@ -227,4 +245,4 @@ class OperationBank:
         Создание задания на создание счета юзера
         """
         logging.info(f'Создание задания на создание счета юзера')
-        self._connect_telebot.send_text(f'Временный стоп, нужно добавить комментарии, коммисия, дата_время')
+        self._connect_telebot.send_text(f'Временный стоп, нужно добавить комментарии, коммисия')
