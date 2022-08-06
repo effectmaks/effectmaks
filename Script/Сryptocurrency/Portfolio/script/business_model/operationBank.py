@@ -7,6 +7,7 @@ from base.coin import ModelCoin
 from base.cash import ModelCash
 from telegram_bot.api.modesWork import ModesWork
 from .simpledate import SimpleDate
+from .nextfunction import NextFunction
 
 
 class ExceptionOperationBank(Exception):
@@ -23,8 +24,7 @@ class OperationBank:
         logging.info('Создание объекта OperationBank')
         self._command_now = command_now
         self._connect_telebot = connect_telebot
-        self._next_function = None
-        self._add_next_function = False
+        self._next_function = NextFunction()
         self._choice_date_time: datetime
         self._choice_safe_type: str
         self._MODE_ADD = 'ДОБАВИТЬ'
@@ -35,45 +35,21 @@ class OperationBank:
         self._TYPE_USD = 'USD'
         self._choice_coin: str
         self._coin_list = []
-        self._choice_coin: str
         self._choice_amount: float
         self._choice_fee: float
 
-
     def work(self, message_str: str):
-        if self._work_next_function(message_str):  # функция выполнилась
+        if self._next_function.work(message_str):  # функция выполнилась
             return
         if self._command_now == ModesWork.COMMAND_INPUT:
             self._input_date_time_question()
-
-    def _set_next_function(self, fnc):
-        """
-        Устанавливает следующая функция для вызова, когда придет новое сообщение
-        :param fnc: Следующая функция для вызова
-        """
-        logging.info(f'Следующая функция {fnc.__name__}')
-        self._next_function = fnc
-        self._add_next_function = True
-
-    def _work_next_function(self, message_str: str) -> bool:
-        """
-        Если было назначена следующая функция, то нужно выполнить
-        :param message_str: Текст сообщения пользователя
-        :return:True - выполнилась функция
-        """
-        if self._next_function:
-            self._next_function(message_str)
-            if not self._add_next_function:
-                self._next_function = None
-                self._add_next_function = False
-            return True  # Выполнилась функция
-
+    
     def _input_date_time_question(self):
         """
         Режим вопрос пользователю введите дату и время перевода
         """
         self._connect_telebot.send_text('Введите дату и время:')
-        self._set_next_function(self._input_date_time_answer)
+        self._next_function.set(self._input_date_time_answer)
 
     def _input_date_time_answer(self, message_str: str):
         """
@@ -90,7 +66,7 @@ class OperationBank:
         logging.info(f'Режим задать вопрос, какой тип сейфа?')
         list_name: list = Safetypes.get_list()
         self._connect_telebot.view_keyboard('Выберите тип сейфа:', list_name=list_name)
-        self._set_next_function(self._input_safe_type_check)
+        self._next_function.set(self._input_safe_type_check)
 
     def _input_safe_type_check(self, message_str: str):
         """
@@ -117,7 +93,7 @@ class OperationBank:
         safes_dict[self._MODE_ADD] = self._MODE_ADD
         self._dict_safes_user = safes_dict
         self._connect_telebot.view_keyboard('Выберите сейф:', dict_name=safes_dict)
-        self._set_next_function(self._input_safe_list_check)
+        self._next_function.set(self._input_safe_list_check)
 
     def _input_safe_list_check(self, message_str: str):
         """
@@ -144,7 +120,7 @@ class OperationBank:
         """
         logging.info(f'Режим создания сейфа с типом "{self._choice_safe_type}"')
         self._connect_telebot.send_text(f'Введите название сейфа с типом - "{self._choice_safe_type}":')
-        self._set_next_function(self._create_safe_answer)
+        self._next_function.set(self._create_safe_answer)
 
     def _create_safe_answer(self, message_str: str):
         """
@@ -169,7 +145,7 @@ class OperationBank:
         coin_list.append(self._MODE_ADD)
         self._coin_list = coin_list
         self._connect_telebot.view_keyboard('Выберите монету/валюту:', list_name=self._coin_list)
-        self._set_next_function(self._input_coin_answer)
+        self._next_function.set(self._input_coin_answer)
 
     def _input_coin_answer(self, message_str: str):
         """
@@ -196,7 +172,7 @@ class OperationBank:
         logging.info(f'Режим создания монеты.')
         coin_list = ModelCoin.get_list()
         self._connect_telebot.view_keyboard('Напишите или выберите монету/валюту:', list_name=coin_list)
-        self._set_next_function(self._create_coin_answer)
+        self._next_function.set(self._create_coin_answer)
 
     def _create_coin_answer(self, message_str: str):
         """
@@ -216,7 +192,7 @@ class OperationBank:
         """
         logging.info(f'Режим вопроса объем пополнения')
         self._connect_telebot.send_text(f'Введите объем пополнения:')
-        self._set_next_function(self._input_amount_answer)
+        self._next_function.set(self._input_amount_answer)
 
     def _input_amount_answer(self, message_str: str):
         """
@@ -247,7 +223,7 @@ class OperationBank:
         """
         logging.info(f'Режим вопроса комиссия')
         self._connect_telebot.send_text(f'Введите комиссию:')
-        self._set_next_function(self._input_fee_answer)
+        self._next_function.set(self._input_fee_answer)
 
     def _input_fee_answer(self, message_str: str):
         """
@@ -271,7 +247,7 @@ class OperationBank:
         """
         logging.info(f'Режим ввода комментария')
         self._connect_telebot.send_text(f'Введите комментарий:')
-        self._set_next_function(self._input_comment_answer)
+        self._next_function.set(self._input_comment_answer)
 
     def _input_comment_answer(self, message_str: str):
         """
