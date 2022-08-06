@@ -3,6 +3,7 @@ from typing import Dict
 from telebot import TeleBot
 from ..controlBot import ControlBot
 from .telegramApi import Message, ConnectTelebot
+from business_model.taskrule import TaskRule
 
 
 class Users:
@@ -32,6 +33,7 @@ class Users:
             logging.info(f'Новое сообщение id_user:{message.from_user.id}')
         else:
             logging.info(f'Новый user_id:{message.from_user.id}')
+            TaskRule.check_delete(message.from_user.id)  # Проверяет базу на наличие запущенных заданий
             user = Users(bot_telegram, message.from_user.id)
             cls.dict_users[message.from_user.id] = user
         try:
