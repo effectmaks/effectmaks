@@ -19,7 +19,7 @@ class SimpleDate:
     def __init__(self, connect_telebot: ConnectTelebot):
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(SimpleDate.__name__)
-        self._next_function.set(self._input_date_time_question)
+        self._next_function.set(self._input_date_time_question)   # первое что выполнит скрипт
         self._date_time: datetime = None
         self._question_yes_no: QuestionYesNo
 
@@ -89,9 +89,10 @@ class SimpleDate:
         """
         try:
             self._date_time = SimpleDate.convert(self._connect_telebot.message)
+            logging.info(f'Преобразована дата - {self._date_time}')
         except Exception as err:
             logging.info(f'Невозможно преобразовать дату и время - "{self._connect_telebot.message}"')
-            self._question_yes_no = QuestionYesNo(self._connect_telebot)
+            self._question_yes_no = QuestionYesNo(self._connect_telebot, "Ошибка преобразования даты")
             self._wait_answer_repeat()
 
     def _wait_answer_repeat(self):
@@ -99,8 +100,8 @@ class SimpleDate:
         if b_working:
             self._next_function.set(self._wait_answer_repeat)
             return
-        repeat: bool = self._question_yes_no.result
-        if repeat:
+        result: bool = self._question_yes_no.result
+        if result:
             self._input_date_time_question()
         else:
             raise ExceptionSimpleDate('Пользователь отказался повторять ввод даты еще раз.')
