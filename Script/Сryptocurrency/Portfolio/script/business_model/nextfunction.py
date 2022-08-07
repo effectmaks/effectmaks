@@ -19,14 +19,13 @@ class NextFunction:
         self._next_function = fnc
         self._add_next_function = True
 
-    def work(self, message_str: str) -> bool:
+    def work(self) -> bool:
         """
         Если было назначена следующая функция, то нужно выполнить
-        :param message_str: Текст сообщения пользователя
         :return:True - выполнилась функция
         """
         if self._next_function:
-            self._next_function(message_str)
+            self._next_function()
             if not self._add_next_function:
                 self._next_function = None
                 self._add_next_function = False
