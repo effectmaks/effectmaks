@@ -1,5 +1,8 @@
 import logging
 from datetime import datetime
+from telegram_bot.api.telegramApi import ConnectTelebot
+from business_model.nextfunction import NextFunction
+from business_model.questionYesNo import QuestionYesNo
 
 
 class ExceptionSimpleDate(Exception):
@@ -12,6 +15,14 @@ class SimpleDate:
     """
     Конвертация даты и времени
     """
+
+    def __init__(self, connect_telebot: ConnectTelebot):
+        self._connect_telebot = connect_telebot
+        self._next_function = NextFunction(SimpleDate.__name__)
+        self._next_function.set(self._input_date_time_question)
+        self._date_time: datetime = None
+        self._question_yes_no: QuestionYesNo
+
     @classmethod
     def convert(cls, date_time_str: str) -> datetime:
         date_time_str = cls._replace_symbol(date_time_str)
@@ -64,3 +75,52 @@ class SimpleDate:
         date_time_str = date_time_str.replace(":", ".")
         date_time_str = date_time_str.replace("-", ".")
         return date_time_str
+
+    def _input_date_time_question(self):
+        """
+        Режим вопрос пользователю введите дату и время перевода
+        """
+        self._connect_telebot.send_text('Введите дату и время:')
+        self._next_function.set(self._input_date_time_answer)
+
+    def _input_date_time_answer(self):
+        """
+        Режим проверки даты и времени
+        """
+        try:
+            self._date_time = SimpleDate.convert(self._connect_telebot.message)
+        except Exception as err:
+            logging.info(f'Невозможно преобразовать дату и время - "{self._connect_telebot.message}"')
+            self._question_yes_no = QuestionYesNo(self._connect_telebot)
+            self._wait_answer_repeat()
+
+    def _wait_answer_repeat(self):
+        b_working = self._question_yes_no.work()
+        if b_working:
+            self._next_function.set(self._wait_answer_repeat)
+            return
+        repeat: bool = self._question_yes_no.result
+        if repeat:
+            self._input_date_time_question()
+        else:
+            raise ExceptionSimpleDate('Пользователь отказался повторять ввод даты еще раз.')
+
+    @property
+    def result(self):
+        return self._date_time
+
+    def work(self) -> bool:
+        self._next_function.work()
+        if not self.result:
+            return True
+
+
+
+
+
+
+
+
+
+
+
