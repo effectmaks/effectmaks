@@ -1,8 +1,9 @@
 import logging
+from datetime import datetime
+
 from peewee import DateTimeField, IntegerField, DoubleField, TextField, Model
+
 from .sqlite.connectSqlite import ConnectSqlite, ExceptionInsert, ExceptionSelect, ExceptionDelete
-from business_model.simpledate import SimpleDate
-from .task import Task, TaskStatus
 
 
 class EventBank(Model):
@@ -27,7 +28,7 @@ class ModelEventBank:
     __name_model = 'eventbank'
 
     @classmethod
-    def add(cls, id_task: int, type: str, date_time_str: str, id_cash_buy: int = 0,
+    def add(cls, id_task: int, type: str, date_time: datetime = None, id_cash_buy: int = 0,
             id_cash_sell: int = 0, fee: float = '', comment: str = '') -> int:
         """
         Добавление события банка. Конвертация, ввод и вывод из системы.
@@ -44,13 +45,13 @@ class ModelEventBank:
 
         logging.info(
             f'Добавление события банка id_task:{id_task} type:{type} '
-            f'date_time_str:{date_time_str} id_cash_buy:{id_cash_buy} id_cash_sell:{id_cash_sell} '
+            f'date_time_str:{date_time} id_cash_buy:{id_cash_buy} id_cash_sell:{id_cash_sell} '
             f'fee:{fee} comment:{comment}')
-        date_time_obj = SimpleDate.convert(date_time_str)  # Вызывает исключение при неправильной конвертации
+
         try:
             id_event = EventBank.create(id_task=id_task,
                                         type=type,
-                                        date_time=date_time_obj,
+                                        date_time=date_time,
                                         id_cash_buy=id_cash_buy,
                                         id_cash_sell=id_cash_sell,
                                         fee=fee,
