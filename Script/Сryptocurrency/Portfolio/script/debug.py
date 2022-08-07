@@ -1,7 +1,8 @@
-import sys
 import logging
-from business_model.taskrule import TaskRule, TaskModes
+import sys
 from datetime import datetime
+from business_model.taskrule import TaskRule
+from telegram_bot.api.commandsWork import CommandsWork
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,16 +14,17 @@ logging.basicConfig(
 )
 
 if __name__ == '__main__':
-    task = TaskRule(task_type=TaskModes.BANK_INPUT,
-                date_time=datetime.now(),
-                id_user=481687938,
-                safe_type='EXCHANGE',
-                safe_name='OKEX',
-                id_safe_user=1,
-                coin='ETH',
-                amount=1,
-                fee=0.001)
-    task.execute()
-    task.check_delete(id_user=481687938)
+    TaskRule.check_delete(id_user=481687938)
+    task = TaskRule(command_type=CommandsWork.COMMAND_INPUT)
+    task.date_time = datetime.now()
+    task.id_user = 481687938
+    task.safe_type = 'EXCHANGE'
+    task.safe_name = 'OKEX'
+    task.id_safe_user = 1
+    task.coin = 'ETH'
+    task.amount = 1
+    task.fee = 0.001
+    task.comment = '1234'
+    task.run()
 
 
