@@ -29,7 +29,7 @@ def start_bot():
 
     @bot_telegram.message_handler(content_types=['text'])
     def new_message(message):
-        Users.message_info(bot_telegram, message)
+        Users.message_info(bot_telegram, message.from_user.id, message.text)
 
     @bot_telegram.callback_query_handler(func=lambda call: True)
     def click_button(call):
