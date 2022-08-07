@@ -1,7 +1,9 @@
 import logging
-from peewee import TextField, IntegerField, DateTimeField, BooleanField, Model, fn
-from .sqlite.connectSqlite import ConnectSqlite, ExceptionSelect, ExceptionInsert, ExceptionDelete, ExceptionUpdate
 from datetime import datetime
+
+from peewee import TextField, IntegerField, DateTimeField, Model
+
+from .sqlite.connectSqlite import ConnectSqlite, ExceptionSelect, ExceptionInsert
 
 
 class TaskStatus:
@@ -68,14 +70,39 @@ class ModelTask:
             raise ExceptionSelect(cls.__name_model, str(err))
 
     @classmethod
-    def set_delete(cls, id_task: int):
+    def set_delete_status(cls, id_task: int):
         """
         Помечает статус задания с id_task как TaskStatus.DELETED
         :param id_user: ID юзера
         """
-        logging.info(f'Команда пометить ID_задание:{id_task} - TaskStatus.DELETED')
+        cls._set_status(id_task=id_task, type_status=TaskStatus.DELETED)
+
+    @classmethod
+    def set_run_status(cls, id_task: int):
+        """
+        Помечает статус задания с id_task как TaskStatus.DELETED
+        :param id_user: ID юзера
+        """
+        cls._set_status(id_task=id_task, type_status=TaskStatus.RUN)
+
+    @classmethod
+    def set_completed_status(cls, id_task: int):
+        """
+        Помечает статус задания с id_task как TaskStatus.DELETED
+        :param id_user: ID юзера
+        """
+        cls._set_status(id_task=id_task, type_status=TaskStatus.COMPLETED)
+
+    @classmethod
+    def _set_status(cls, id_task: int, type_status: str):
+        """
+        Помечает статус задания с id_task как type_status
+        :param id_user: ID юзера
+        :param type_status: Тип статуса
+        """
+        logging.info(f'Команда пометить ID_задание:{id_task} - статус:{type_status}')
         try:
-            command_update = Task.update(status=TaskStatus.DELETED).where(Task.id == id_task)
+            command_update = Task.update(status=type_status).where(Task.id == id_task)
             command_update.execute()
             logging.info(f'Успешно обновлен статус задания.')
             return id_task
