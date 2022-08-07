@@ -3,7 +3,7 @@ from business_model.nextfunction import NextFunction
 
 
 class QuestionYesNo:
-    def __init__(self, connect_telebot: ConnectTelebot):
+    def __init__(self, connect_telebot: ConnectTelebot, text_err: str):
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(QuestionYesNo.__name__)
         self._next_function.set(self._set_question)
@@ -12,12 +12,13 @@ class QuestionYesNo:
         self._list_options = [self._YES, self._NO]
         self._choice: bool = False
         self._result: bool = False
+        self._text_err: str = text_err
 
     def _set_question(self):
         """
         Сформировать вопрос
         """
-        self._connect_telebot.view_keyboard_yes_no('Ошибка преобразования даты.\n Желаете повторить?',
+        self._connect_telebot.view_keyboard_yes_no(f'{self._text_err}.\n Желаете повторить?',
                                                    self._YES, self._NO)
         self._next_function.set(self._answer)
 
