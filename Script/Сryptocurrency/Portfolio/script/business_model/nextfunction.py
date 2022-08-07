@@ -5,7 +5,8 @@ class NextFunction:
     """
     Хранит в себе функцию, которую надо выполнить следующей, после ввода юзером ответа.
     """
-    def __init__(self):
+    def __init__(self, cls_name: str):
+        self._cls_name = cls_name
         self._next_function = None
         self._add_next_function: bool
 
@@ -14,7 +15,7 @@ class NextFunction:
         Устанавливает следующая функция для вызова, когда придет новое сообщение
         :param fnc: Следующая функция для вызова
         """
-        logging.info(f'Следующая функция {fnc.__name__}')
+        logging.info(f'Класс {self._cls_name} следующая функция {fnc.__name__}')
         self._next_function = fnc
         self._add_next_function = True
 
