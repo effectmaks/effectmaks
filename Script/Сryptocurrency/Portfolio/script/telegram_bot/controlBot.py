@@ -1,7 +1,7 @@
 import logging
 from .api.telegramApi import ConnectTelebot
 from business_model.operationBank import OperationBank
-from .api.modesWork import ModesWork
+from .api.commandsWork import CommandsWork
 
 
 class ControlBot:
@@ -12,7 +12,7 @@ class ControlBot:
 
     def __init__(self, connect_telebot: ConnectTelebot):
         self.__connect_telebot: ConnectTelebot = connect_telebot
-        self._command_now = ModesWork.NONE
+        self._command_now = CommandsWork.NONE
         self._operaton_bank = None
 
     def new_message(self, message_str: str):
@@ -30,17 +30,17 @@ class ControlBot:
         """
         Режим пополнения средств на сейф из вне.
         """
-        if message_str == ModesWork.COMMAND_INPUT:
-            self._command_now = ModesWork.COMMAND_INPUT
+        if message_str == CommandsWork.COMMAND_INPUT:
+            self._command_now = CommandsWork.COMMAND_INPUT
             self._operaton_bank = OperationBank(self.__connect_telebot, self._command_now)
 
-        if self._command_now == ModesWork.COMMAND_INPUT:
+        if self._command_now == CommandsWork.COMMAND_INPUT:
             try:
                 self._operaton_bank.work(message_str)
             except Exception as err:
                 logging.error(f'_input_mode: {str(err)}')
                 self.__connect_telebot.send_text(f'Команда {self._command_now} завершена не успешно.')
-                self._command_now = ModesWork.NONE
+                self._command_now = CommandsWork.NONE
             return True
         return False
 
@@ -50,10 +50,10 @@ class ControlBot:
         :param message: Объект текстом юзера
         :return: True выполнена команда
         """
-        if message_str == ModesWork.COMMAND_START:
+        if message_str == CommandsWork.COMMAND_START:
             self._send_text_bot_start()
             return True
-        elif message_str == ModesWork.COMMAND_HELP:
+        elif message_str == CommandsWork.COMMAND_HELP:
             self._send_text_bot_help()
             return True
         return False
@@ -64,7 +64,7 @@ class ControlBot:
         :param id_user: ID пользователя
         """
         logging.info(f'Режим: СТАРТ')
-        text_send = f'{self.__NAME_BOT} - твой крипто-портфель. Введите {ModesWork.COMMAND_HELP}.'
+        text_send = f'{self.__NAME_BOT} - твой крипто-портфель. Введите {CommandsWork.COMMAND_HELP}.'
         self.__connect_telebot.send_text(text_send)
 
     def _send_text_bot_help(self):
@@ -74,5 +74,5 @@ class ControlBot:
         """
         logging.info(f'Режим: Помощь')
         text_send = f'{self.__NAME_BOT} выполняет команды: \n' \
-                    f'{ModesWork.COMMAND_INPUT} - пополнить счет'
+                    f'{CommandsWork.COMMAND_INPUT} - пополнить счет'
         self.__connect_telebot.send_text(text_send)
