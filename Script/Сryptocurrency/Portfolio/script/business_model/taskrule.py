@@ -1,8 +1,10 @@
 import logging
 from datetime import datetime
-from base.task import ModelTask, TaskStatus
-from ..base.cash import ModelCash
+
+from base.cash import ModelCash
 from base.eventbank import ModelEventBank
+from base.task import ModelTask, TaskStatus
+from telegram_bot.api.commandsWork import CommandsWork
 
 
 class ExceptionTaskList(Exception):
@@ -11,49 +13,42 @@ class ExceptionTaskList(Exception):
         super().__init__(err_message)
 
 
-class TaskModes:
-    BANK_INPUT = "BANK_INPUT"
-
-
 class TaskRule:
     """
     Выполняет задание на заполнение базы данными
     """
-    def __init__(self, task_type: str = "",
-                       date_time: datetime = None,
-                       id_user: int = 0,
-                       safe_type: str = '',
-                       safe_name: str = '',
-                       id_safe_user: int = '',
-                       coin: str = '',
-                       amount: float = '',
-                       fee: float  = ''):
-        logging.info('Создание задания')
-        self._task_type: str = task_type
+    def __init__(self, id_user: int, command_type: str):
+        logging.info(f'Создание задания. Тип: {command_type}')
+        self._command_type: str = command_type
         self._id_user: int = id_user
-        self._date_time: datetime = date_time
-        self._safe_type: str = safe_type
-        self._safe_name: str = safe_name
-        self._id_safe_user: int = id_safe_user
-        self._coin: str = coin
-        self._amount: float = amount
-        self._fee: float = fee
-        self._id_task: int
+        self.date_time: datetime = None
+        self.safe_type: str = ""
+        self.safe_name: str = ""
+        self.id_safe_user: int = 0
+        self.coin: str = ""
+        self.amount: float = 0
+        self.fee: float = 0
+        self.id_task: int = 0
+        self.comment: str = ""
 
-    def execute(self):
-        logging.info('Команда выполнить задание')
-        if self._task_type == TaskModes.BANK_INPUT:
+    def run(self):
+        logging.info(f'Команда выполнить задание. Тип: {self._command_type}')
+        if self._command_type == CommandsWork.COMMAND_INPUT:
             try:
-                desc = f"Добавить date_time:{self._date_time},  safe_name:{self._safe_name}, " \
-                       f"id_safe_user:{self._id_safe_user}, coin:{self._coin}, amount:{self._amount}, fee:{self._fee}"
-                self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._task_type, desc=desc,
+                desc = f"Добавить date_time:{self.date_time},  safe_name:{self.safe_name}, " \
+                       f"id_safe_user:{self.id_safe_user}, coin:{self.coin}, amount:{self.amount}, fee:{self.fee}"
+                self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
                                                  status=TaskStatus.RUN)
-                ModelCash.add(id_safe_user=self._id_safe_user, date_time=self._date_time, coin=self._coin,
-                              amount_buy=self._amount, price_buy_fiat=0, id_task=self._id_task)
-                logging.info(f'Задание {TaskModes.BANK_INPUT} выполнено')
+                id_cash_buy = ModelCash.add(id_safe_user=self.id_safe_user, date_time=self.date_time, coin=self.coin,
+                              amount_buy=self.amount, price_buy_fiat=0, id_task=self._id_task)
+                ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=datetime.now(),
+                                   id_cash_buy=id_cash_buy, fee=self.fee, comment=self.comment)
+                ModelTask.set_completed_status(self._id_task)
+                logging.info(f'Задание {CommandsWork.COMMAND_INPUT} выполнено')
             except Exception as err:
-                logging.info(f'Задание {TaskModes.BANK_INPUT} НЕ выполнено')
-                raise ExceptionTaskList(f'Ошибка {TaskModes.BANK_INPUT}: {err}')
+                logging.error(f'Задание {CommandsWork.COMMAND_INPUT} НЕ выполнено')
+                self._task_delete(id_task_delete=self._id_task)
+                raise ExceptionTaskList(f'Ошибка {CommandsWork.COMMAND_INPUT}: {err}')
 
     @classmethod
     def check_delete(cls, id_user: int = 0):
@@ -83,10 +78,10 @@ class TaskRule:
             logging.info(f'Удалить все записи задания ID:{id_task_delete}')
             ModelCash.delete_task_run(id_task=id_task_delete)
             ModelEventBank.delete_task_run(id_task=id_task_delete)
-            ModelTask.set_delete(id_task_delete)
+            ModelTask.set_delete_status(id_task_delete)
             logging.info(f'ID задание:{id_task_delete} успешно удалено.')
         except Exception as err:
-            logging.error(f'Не удалось удалить все записи с ID_task: {id_task_delete}')
+            logging.error(f'Не удалось удалить все записи с ID_task: {id_task_delete} -  {str(err)}')
 
 
 

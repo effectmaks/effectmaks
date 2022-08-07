@@ -1,13 +1,15 @@
-import datetime
 import logging
-from telegram_bot.api.telegramApi import ConnectTelebot
-from base.safeuser import ModelSafeuser
-from base.safelist import Safetypes, ModelSafelist
-from base.coin import ModelCoin
+
 from base.cash import ModelCash
-from telegram_bot.api.modesWork import ModesWork
-from .simpledate import SimpleDate
+from base.coin import ModelCoin
+from base.safelist import Safetypes, ModelSafelist
+from base.safeuser import ModelSafeuser
+from telegram_bot.api.commandsWork import CommandsWork
+from telegram_bot.api.telegramApi import ConnectTelebot
+
 from .nextfunction import NextFunction
+from .simpledate import SimpleDate
+from business_model.taskrule import TaskRule
 
 
 class ExceptionOperationBank(Exception):
@@ -25,23 +27,16 @@ class OperationBank:
         self._command_now = command_now
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction()
-        self._choice_date_time: datetime
-        self._choice_safe_type: str
         self._MODE_ADD = 'ДОБАВИТЬ'
         self._dict_safes_user = {}
-        self._choice_safe_name: str
-        self._choice_id_safe_user: int
-        self._TYPE_COIN = 'COIN'
-        self._TYPE_USD = 'USD'
-        self._choice_coin: str
         self._coin_list = []
-        self._choice_amount: float
-        self._choice_fee: float
+        self._task_rule: TaskRule
 
     def work(self, message_str: str):
         if self._next_function.work(message_str):  # функция выполнилась
             return
-        if self._command_now == ModesWork.COMMAND_INPUT:
+        if self._command_now == CommandsWork.COMMAND_INPUT:
+            self._task_rule = TaskRule(id_user=self._connect_telebot.id_user, command_type=CommandsWork.COMMAND_INPUT)
             self._input_date_time_question()
     
     def _input_date_time_question(self):
@@ -56,7 +51,7 @@ class OperationBank:
         Режим проверки даты и времени
         :param message_str: Ответ юзера
         """
-        self._choice_date_time = SimpleDate.convert(message_str)
+        self._task_rule.date_time = SimpleDate.convert(message_str)
         self._input_safe_type()
 
     def _input_safe_type(self):
@@ -76,7 +71,7 @@ class OperationBank:
         """
         logging.info(f'Режим проверить "{message_str}" - это тип?')
         if Safetypes.check(message_str):
-            self._choice_safe_type = message_str
+            self._task_rule.safe_type = message_str
             self._input_safe_list()
         else:
             self._connect_telebot.send_text('Выбран неправильный тип сейфа.')
@@ -84,10 +79,10 @@ class OperationBank:
 
     def _input_safe_list(self):
         """
-        Режим показать сейфы с типом self._choice_safe_type
+        Режим показать сейфы с типом self._task_rule.safe_type
         """
-        logging.info(f'Режим показать сейфы с типом "{self._choice_safe_type}"')
-        safes_dict = ModelSafeuser.get_dict(self._connect_telebot.id_user, type_name=self._choice_safe_type)
+        logging.info(f'Режим показать сейфы с типом "{self._task_rule.safe_type}"')
+        safes_dict = ModelSafeuser.get_dict(self._connect_telebot.id_user, type_name=self._task_rule.safe_type)
         if not safes_dict:
             safes_dict = {}
         safes_dict[self._MODE_ADD] = self._MODE_ADD
@@ -97,8 +92,8 @@ class OperationBank:
 
     def _input_safe_list_check(self, message_str: str):
         """
-        Проверка какой сейф выбрали с типом self._choice_safe_type.
-        Или переход на шаг создания нового сейфа с типом self._choice_safe_type.
+        Проверка какой сейф выбрали с типом self._task_rule.safe_type.
+        Или переход на шаг создания нового сейфа с типом self._task_rule.safe_type.
         :param message_str: Ответ юзера
         """
         if message_str == self._MODE_ADD:
@@ -106,9 +101,9 @@ class OperationBank:
         else:
             id_safe = self._dict_safes_user.get(message_str)
             if id_safe:
-                self._choice_safe_name = message_str
-                self._choice_id_safe_user = id_safe
-                logging.info(f'Выбран сейф ID_safe_user:{self._choice_id_safe_user} name:"{self._choice_safe_name}"')
+                self._task_rule.safe_name = message_str
+                self._task_rule.id_safe_user = id_safe
+                logging.info(f'Выбран сейф ID_safe_user:{self._task_rule.id_safe_user} name:"{self._task_rule.safe_name}"')
                 self._input_coin_question()
             else:
                 self._connect_telebot.send_text(f'Такого сейфа "{message_str}" нет в списке.')
@@ -118,8 +113,8 @@ class OperationBank:
         """
         Вопрос - какое имя сейфа создавать?
         """
-        logging.info(f'Режим создания сейфа с типом "{self._choice_safe_type}"')
-        self._connect_telebot.send_text(f'Введите название сейфа с типом - "{self._choice_safe_type}":')
+        logging.info(f'Режим создания сейфа с типом "{self._task_rule.safe_type}"')
+        self._connect_telebot.send_text(f'Введите название сейфа с типом - "{self._task_rule.safe_type}":')
         self._next_function.set(self._create_safe_answer)
 
     def _create_safe_answer(self, message_str: str):
@@ -129,9 +124,9 @@ class OperationBank:
         """
         logging.info(f'Режим проверки названия сейфа "{message_str}"')
         message_str = message_str.upper()
-        id_safe_list = ModelSafelist.command_create(message_str, self._choice_safe_type)
-        self._choice_id_safe_user = ModelSafeuser.command_create(self._connect_telebot.id_user, id_safe_list)
-        self._connect_telebot.send_text(f'Добавлен новый сейф "{message_str}" с типом {self._choice_safe_type}.')
+        id_safelist = ModelSafelist.command_create(message_str, self._task_rule.safe_type)
+        self._task_rule.id_safe_user = ModelSafeuser.command_create(self._connect_telebot.id_user, id_safelist)
+        self._connect_telebot.send_text(f'Добавлен новый сейф "{message_str}" с типом {self._task_rule.safe_type}.')
         self._input_coin_question()
 
     def _input_coin_question(self):
@@ -139,7 +134,7 @@ class OperationBank:
         Выбрать монету
         """
         logging.info(f'Режим вопрос пользователю, выберите монету.')
-        coin_list = ModelCash.get_cash_coin(self._choice_id_safe_user)
+        coin_list = ModelCash.get_cash_coin(self._task_rule.id_safe_user)
         if not coin_list:
             coin_list = []
         coin_list.append(self._MODE_ADD)
@@ -158,8 +153,8 @@ class OperationBank:
             self._create_coin_question()
         else:
             if message_str in self._coin_list:
-                self._choice_coin = message_str
-                logging.info(f'Выбрана монета "{self._choice_coin}"')
+                self._task_rule.coin = message_str
+                logging.info(f'Выбрана монета "{self._task_rule.coin}"')
                 self._input_amount_question()
             else:
                 self._connect_telebot.send_text(f'Пункта "{message_str}" нет в списке.')
@@ -182,8 +177,8 @@ class OperationBank:
         logging.info(f'Режим проверки названия монеты "{message_str}"')
         message_str = message_str.upper()
         ModelCoin.command_create(message_str)
-        self._choice_coin = message_str
-        logging.info(f'Выбрана монета "{self._choice_coin}"')
+        self._task_rule.coin = message_str
+        logging.info(f'Выбрана монета "{self._task_rule.coin}"')
         self._input_amount_question()
 
     def _input_amount_question(self):
@@ -203,8 +198,8 @@ class OperationBank:
         logging.info(f'Режим проверки объема пополнения')
         amount = self._isfloat(message_str)
         if amount:
-            self._choice_amount = amount
-            logging.info(f'Выбран объем - {self._choice_amount}')
+            self._task_rule.amount = amount
+            logging.info(f'Выбран объем - {self._task_rule.amount}')
             self._input_fee_question()
         else:
             self._connect_telebot.send_text('Невозможно преобразовать число.')
@@ -234,8 +229,8 @@ class OperationBank:
         logging.info(f'Режим проверки комиссии')
         amount = self._isfloat(message_str)
         if amount:
-            self._choice_fee = amount
-            logging.info(f'Введена комиссия - {self._choice_fee}')
+            self._task_rule.fee = amount
+            logging.info(f'Введена комиссия - {self._task_rule.fee}')
             self._input_comment_question()
         else:
             self._connect_telebot.send_text('Невозможно преобразовать число.')
@@ -256,8 +251,8 @@ class OperationBank:
         :return:
         """
         logging.info(f'Режим проверки комментария')
-        self._choice_comment = message_str
-        logging.info(f'Выбран комментарий - "{self._choice_comment}"')
+        self._task_rule.comment = message_str
+        logging.info(f'Выбран комментарий - "{self._task_rule.comment}"')
         self._input_create_task()
 
     def _input_create_task(self):
@@ -265,4 +260,5 @@ class OperationBank:
         Создание задания на создание счета юзера
         """
         logging.info(f'Создание задания на создание счета юзера')
-        self._connect_telebot.send_text(f'Временный стоп')
+        self._task_rule.run()
+        self._connect_telebot.send_text('Команда выполнена.')
