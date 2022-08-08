@@ -4,6 +4,7 @@ from telegram_bot.api.commandsWork import CommandsWork
 from telegram_bot.api.telegramApi import ConnectTelebot
 from .choice.choicecoin import ChoiceCoin
 from .choice.choicefloat import ChoiceFloat
+from .choice.choicetext import ChoiceText
 
 from .nextfunction import NextFunction
 from business_model.taskrule import TaskRule
@@ -31,6 +32,7 @@ class OperationBank:
         self._choice_coin: ChoiceCoin = None
         self._choice_amount: ChoiceFloat = None
         self._choice_fee: ChoiceFloat = None
+        self._choice_comment: ChoiceText = None
         self._task_rule: TaskRule
 
     def work(self):
@@ -111,25 +113,19 @@ class OperationBank:
         if working:
             self._next_function.set(self._work_choice_fee)  # еще не выбрано, повторить
         else:
-            self._input_comment_question()  # далее выполнить
+            self._work_choice_comment()  # далее выполнить
 
-    def _input_comment_question(self):
+    def _work_choice_comment(self):
         """
-        Режим вопроса, введите комментарий
+        Команда сформировать comment
         """
-        logging.info(f'Режим ввода комментария')
-        self._connect_telebot.send_text(f'Введите комментарий:')
-        self._next_function.set(self._input_comment_answer)
-
-    def _input_comment_answer(self):
-        """
-        Проверка комментария
-        :return:
-        """
-        logging.info(f'Режим проверки комментария')
-        self._task_rule.comment = self._connect_telebot.message
-        logging.info(f'Выбран комментарий - "{self._task_rule.comment}"')
-        self._input_create_task()
+        if not self._choice_comment:
+            self._choice_comment = ChoiceText(self._connect_telebot, question_main='Введите комментарий:')
+        working: bool = self._choice_comment.work()
+        if working:
+            self._next_function.set(self._work_choice_comment)  # еще не выбрано, повторить
+        else:
+            self._input_create_task()  # далее выполнить
 
     def _input_create_task(self):
         """
