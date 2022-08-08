@@ -67,6 +67,10 @@ class ConnectTelebot:
         :param text_keyboard: Вопрос для пользователя
         """
         try:
+            if list_name:
+                logging.info(f'Показать клавиатуру {text_keyboard}-{list_name}')
+            else:
+                logging.info(f'Показать клавиатуру {text_keyboard}-{dict_name.values()}')
             keyboard = types.InlineKeyboardMarkup()  # клавиатура
             if list_name:
                 for value in list_name:
