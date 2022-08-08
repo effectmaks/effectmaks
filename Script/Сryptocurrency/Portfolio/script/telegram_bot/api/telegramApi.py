@@ -4,9 +4,15 @@ import os
 from telebot import TeleBot, types
 
 
+class ExceptionConnectTelebot(Exception):
+    def __init__(self, err_message: str = ''):
+        logging.error(f'Класс {ExceptionConnectTelebot.__name__} - {err_message}')
+        super().__init__(err_message)
+
+
 class ExceptionTelegramApi(Exception):
     def __init__(self, err_message: str = ''):
-        logging.error(err_message)
+        logging.error(f'Класс {ExceptionTelegramApi.__name__} - {err_message}')
         super().__init__(err_message)
 
 
@@ -60,16 +66,19 @@ class ConnectTelebot:
         :param dict_text: Словарь с названиями кнопок
         :param text_keyboard: Вопрос для пользователя
         """
-        keyboard = types.InlineKeyboardMarkup()  # клавиатура
-        if list_name:
-            for value in list_name:
-                key = types.InlineKeyboardButton(text=value, callback_data=value)
-                keyboard.add(key)  # добавляем кнопку
-        else:
-            for value in dict_name.keys():
-                key = types.InlineKeyboardButton(text=value, callback_data=value)
-                keyboard.add(key)  # добавляем кнопку
-        self._telebot.send_message(self._id_user, text=text_keyboard, reply_markup=keyboard)
+        try:
+            keyboard = types.InlineKeyboardMarkup()  # клавиатура
+            if list_name:
+                for value in list_name:
+                    key = types.InlineKeyboardButton(text=value, callback_data=value)
+                    keyboard.add(key)  # добавляем кнопку
+            else:
+                for value in dict_name.keys():
+                    key = types.InlineKeyboardButton(text=value, callback_data=value)
+                    keyboard.add(key)  # добавляем кнопку
+            self._telebot.send_message(self._id_user, text=text_keyboard, reply_markup=keyboard)
+        except Exception as err:
+            raise ExceptionConnectTelebot(f'Ошибка создания клавиатуры - {self.view_keyboard.__name__}')
 
     def view_keyboard_yes_no(self, text_keyboard: str, const_yes: str, const_no: str):
         """
@@ -77,12 +86,14 @@ class ConnectTelebot:
         :param dict_text: Словарь с названиями кнопок
         :param text_keyboard: Вопрос для пользователя
         """
-
-        key_yes = types.InlineKeyboardButton(text=const_yes, callback_data=const_yes)
-        key_no = types.InlineKeyboardButton(text=const_no, callback_data=const_no)
-        keyboard = types.InlineKeyboardMarkup()
-        keyboard.row(key_yes, key_no)
-        self._telebot.send_message(self._id_user, text=text_keyboard, reply_markup=keyboard)
+        try:
+            key_yes = types.InlineKeyboardButton(text=const_yes, callback_data=const_yes)
+            key_no = types.InlineKeyboardButton(text=const_no, callback_data=const_no)
+            keyboard = types.InlineKeyboardMarkup()
+            keyboard.row(key_yes, key_no)
+            self._telebot.send_message(self._id_user, text=text_keyboard, reply_markup=keyboard)
+        except Exception as err:
+            raise ExceptionConnectTelebot(f'Ошибка создания клавиатуры - {self.view_keyboard_yes_no.__name__}')
 
 
 
