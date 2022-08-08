@@ -66,7 +66,7 @@ class ChoiceSafe:
         if result:
             self._input_safe_type_check()  # Повторить
         else:
-            raise ExceptionChoiceSafe('Пользователь отказался выбирать тип сейфа.')
+            raise ExceptionChoiceSafe('Юзер отказался повторять. Он не выбрал тип сейфа.')
 
     def _input_safe_list(self):
         """
@@ -109,7 +109,7 @@ class ChoiceSafe:
         if result:
             self._input_safe_type_check()  # Повторить
         else:
-            raise ExceptionChoiceSafe('Пользователь отказался выбирать сейф.')
+            raise ExceptionChoiceSafe('Юзер отказался выбирать сейф.')
 
 
     def _create_safe_question(self):
