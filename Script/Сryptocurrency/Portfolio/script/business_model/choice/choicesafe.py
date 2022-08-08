@@ -9,7 +9,7 @@ from telegram_bot.api.telegramApi import ConnectTelebot
 
 class ExceptionChoiceSafe(Exception):
     def __init__(self, err_message: str = ''):
-        logging.error(f'Класс {ExceptionChoiceSafe.__name__} - err_message')
+        logging.error(f'Класс {ExceptionChoiceSafe.__name__} - {err_message}')
         super().__init__(err_message)
 
 

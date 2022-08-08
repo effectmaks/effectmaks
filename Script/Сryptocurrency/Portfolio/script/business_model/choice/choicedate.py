@@ -7,7 +7,7 @@ from business_model.questionYesNo import QuestionYesNo
 
 class ExceptionChoiceDate(Exception):
     def __init__(self, err_message: str = ''):
-        logging.error(f'Класс {ExceptionChoiceDate.__name__} - err_message')
+        logging.error(f'Класс {ExceptionChoiceDate.__name__} - {err_message}')
         super().__init__(err_message)
 
 
