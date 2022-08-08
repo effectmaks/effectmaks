@@ -1,14 +1,13 @@
 import logging
 
-from base.cash import ModelCash
-from base.coin import ModelCoin
 from telegram_bot.api.commandsWork import CommandsWork
 from telegram_bot.api.telegramApi import ConnectTelebot
+from .choice.choicecoin import ChoiceCoin
 
 from .nextfunction import NextFunction
 from business_model.taskrule import TaskRule
-from business_model.simpledate import SimpleDate
-from business_model.choicesafe import ChoiceSafe, ChoiceSafeResult
+from business_model.choice.choicedate import ChoiceDate
+from business_model.choice.choicesafe import ChoiceSafe
 
 
 class ExceptionOperationBank(Exception):
@@ -26,12 +25,10 @@ class OperationBank:
         self._command_now = command_now
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(OperationBank.__name__)
-        self._simple_date: SimpleDate = None
+        self._simple_date: ChoiceDate = None
         self._choice_safe: ChoiceSafe = None
-        self._dict_safes_user = {}
-        self._coin_list = []
+        self._choice_coin: ChoiceCoin = None
         self._task_rule: TaskRule
-        self._MODE_ADD = 'ДОБАВИТЬ'
 
     def work(self):
         """
@@ -48,7 +45,7 @@ class OperationBank:
         Команда сформировать дату и время
         """
         if not self._simple_date:
-            self._simple_date = SimpleDate(self._connect_telebot)
+            self._simple_date = ChoiceDate(self._connect_telebot)
         working: bool = self._simple_date.work()
         if working:
             self._next_function.set(self._work_simple_date)
@@ -63,7 +60,7 @@ class OperationBank:
             logging.info('Выбрана дата и время')
             self._work_choice_safe()
         else:
-            raise ExceptionOperationBank('SimpleDate завершил свою работу, но даты в результате нет.')
+            raise ExceptionOperationBank('ChoiceDate завершил свою работу, но даты в результате нет.')
 
     def _work_choice_safe(self):
         """
@@ -75,57 +72,19 @@ class OperationBank:
         if working:
             self._next_function.set(self._work_choice_safe)
         else:
-            self._input_coin_question()  # далее выполнить
+            self._work_choice_coin()  # далее выполнить
 
-    def _input_coin_question(self):
+    def _work_choice_coin(self):
         """
-        Выбрать монету
+        Команда сформировать coin
         """
-        logging.info(f'Режим вопрос пользователю, выберите монету.')
-        coin_list = ModelCash.get_cash_coin(self._task_rule.id_safe_user)
-        if not coin_list:
-            coin_list = []
-        coin_list.append(self._MODE_ADD)
-        self._coin_list = coin_list
-        self._connect_telebot.view_keyboard('Выберите монету/валюту:', list_name=self._coin_list)
-        self._next_function.set(self._input_coin_answer)
-
-    def _input_coin_answer(self):
-        """
-        Проверить,монета из списка?
-        Иначе добавить.
-        """
-        logging.info(f'Режим проверка монеты из списка.')
-        if self._connect_telebot.message == self._MODE_ADD:
-            self._create_coin_question()
+        if not self._choice_coin:
+            self._choice_coin = ChoiceCoin(self._connect_telebot, self._choice_safe.result.id_safe)
+        working: bool = self._choice_coin.work()
+        if working:
+            self._next_function.set(self._work_choice_coin)
         else:
-            if self._connect_telebot.message in self._coin_list:
-                self._task_rule.coin = self._connect_telebot.message
-                logging.info(f'Выбрана монета "{self._task_rule.coin}"')
-                self._input_amount_question()
-            else:
-                self._connect_telebot.send_text(f'Пункта "{self._connect_telebot.message}" нет в списке.')
-                raise ExceptionOperationBank(f'Пользователь выбрал пункт - "{self._connect_telebot.message}", он не из списка.')
-
-    def _create_coin_question(self):
-        """
-        Режим вопрос - какое имя монеты создавать?
-        """
-        logging.info(f'Режим создания монеты.')
-        coin_list = ModelCoin.get_list()
-        self._connect_telebot.view_keyboard('Напишите или выберите монету/валюту:', list_name=coin_list)
-        self._next_function.set(self._create_coin_answer)
-
-    def _create_coin_answer(self):
-        """
-        Создать новую монету
-        """
-        logging.info(f'Режим проверки названия монеты "{self._connect_telebot.message}"')
-        message_str = self._connect_telebot.message.upper()
-        ModelCoin.command_create(message_str)
-        self._task_rule.coin = message_str
-        logging.info(f'Выбрана монета "{self._task_rule.coin}"')
-        self._input_amount_question()
+            self._input_amount_question()  # далее выполнить
 
     def _input_amount_question(self):
         """
