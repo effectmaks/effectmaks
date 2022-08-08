@@ -5,20 +5,20 @@ from business_model.nextfunction import NextFunction
 from business_model.questionYesNo import QuestionYesNo
 
 
-class ExceptionSimpleDate(Exception):
+class ExceptionChoiceDate(Exception):
     def __init__(self, err_message: str = ''):
-        logging.error(err_message)
+        logging.error(f'Класс {ExceptionChoiceDate.__name__} - err_message')
         super().__init__(err_message)
 
 
-class SimpleDate:
+class ChoiceDate:
     """
     Конвертация даты и времени
     """
 
     def __init__(self, connect_telebot: ConnectTelebot):
         self._connect_telebot = connect_telebot
-        self._next_function = NextFunction(SimpleDate.__name__)
+        self._next_function = NextFunction(ChoiceDate.__name__)
         self._next_function.set(self._input_date_time_question)   # первое что выполнит скрипт
         self._date_time: datetime = None
         self._question_yes_no: QuestionYesNo
@@ -34,7 +34,7 @@ class SimpleDate:
             return date_time
 
         if not date_time:
-            raise ExceptionSimpleDate(f'cls:{cls.__name__} Ошибка конвертации даты и времени')
+            raise ExceptionChoiceDate(f'cls:{cls.__name__} Ошибка конвертации даты и времени')
 
     @classmethod
     def _variant_1(cls, date_time_str: str) -> datetime:
@@ -88,7 +88,7 @@ class SimpleDate:
         Режим проверки даты и времени
         """
         try:
-            self._date_time = SimpleDate.convert(self._connect_telebot.message)
+            self._date_time = ChoiceDate.convert(self._connect_telebot.message)
             logging.info(f'Преобразована дата - {self._date_time}')
         except Exception as err:
             logging.info(f'Невозможно преобразовать дату и время - "{self._connect_telebot.message}"')
@@ -104,7 +104,7 @@ class SimpleDate:
         if result:
             self._input_date_time_question()
         else:
-            raise ExceptionSimpleDate('Пользователь отказался повторять ввод даты еще раз.')
+            raise ExceptionChoiceDate('Пользователь отказался повторять ввод даты еще раз.')
 
     @property
     def result(self):

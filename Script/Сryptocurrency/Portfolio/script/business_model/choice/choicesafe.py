@@ -9,7 +9,7 @@ from telegram_bot.api.telegramApi import ConnectTelebot
 
 class ExceptionChoiceSafe(Exception):
     def __init__(self, err_message: str = ''):
-        logging.error(err_message)
+        logging.error(f'Класс {ExceptionChoiceSafe.__name__} - err_message')
         super().__init__(err_message)
 
 
@@ -30,7 +30,7 @@ class ChoiceSafe:
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(ChoiceSafe.__name__)
         self._next_function.set(self._input_safe_type)  # первое что выполнит скрипт
-        self._result = ChoiceSafeResult()
+        self._result = ChoiceSafeResult() # класс хранит результат выбора пользователя
         self._MODE_ADD = 'ДОБАВИТЬ'
 
     def _input_safe_type(self):
@@ -130,7 +130,6 @@ class ChoiceSafe:
         self._result.id_safe_user = ModelSafeuser.command_create(self._connect_telebot.id_user, id_safelist)
         self._result.safe_name = message_str
         self._connect_telebot.send_text(f'Добавлен новый сейф "{message_str}" с типом {self._result.safe_type}.')
-
 
     @property
     def result(self) -> ChoiceSafeResult:
