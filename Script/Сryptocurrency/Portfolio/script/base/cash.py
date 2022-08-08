@@ -1,8 +1,6 @@
 import logging
 from peewee import DateTimeField, IntegerField, DoubleField, TextField, Model
 from .sqlite.connectSqlite import ConnectSqlite, ExceptionInsert, ExceptionSelect, ExceptionDelete
-from business_model.simpledate import SimpleDate
-from .task import Task, TaskStatus
 from datetime import datetime
 
 class Cash(Model):

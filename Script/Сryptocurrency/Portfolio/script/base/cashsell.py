@@ -1,7 +1,7 @@
 import logging
-from peewee import DateTimeField, IntegerField, DoubleField, TextField, Model
+from peewee import DateTimeField, IntegerField, DoubleField, Model
 from .sqlite.connectSqlite import ConnectSqlite, ExceptionInsert
-from business_model.simpledate import SimpleDate
+from business_model.choice.choicedate import ChoiceDate
 
 
 class CashSell(Model):
@@ -36,7 +36,7 @@ class ModelCashSell:
         logging.info(
                 f'Добавить счет id_safe:{id_safe} date_time:{date_time_str} id_cash:{id_cash} amount_sell:{amount_sell} '
                 f'price_sell_fiat:{price_sell_fiat}')
-        date_time_obj = SimpleDate.convert(date_time_str)  # Вызывает исключение при неправильной конвертации
+        date_time_obj = ChoiceDate.convert(date_time_str)  # Вызывает исключение при неправильной конвертации
         try:
             id_cash_sell = CashSell.create(id_safe=id_safe,
                                   date_time=date_time_obj,
