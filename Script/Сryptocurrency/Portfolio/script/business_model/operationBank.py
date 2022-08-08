@@ -3,6 +3,7 @@ import logging
 from telegram_bot.api.commandsWork import CommandsWork
 from telegram_bot.api.telegramApi import ConnectTelebot
 from .choice.choicecoin import ChoiceCoin
+from .choice.choicefloat import ChoiceFloat
 
 from .nextfunction import NextFunction
 from business_model.taskrule import TaskRule
@@ -28,6 +29,7 @@ class OperationBank:
         self._simple_date: ChoiceDate = None
         self._choice_safe: ChoiceSafe = None
         self._choice_coin: ChoiceCoin = None
+        self._choice_amount: ChoiceFloat = None
         self._task_rule: TaskRule
 
     def work(self):
@@ -70,7 +72,7 @@ class OperationBank:
             self._choice_safe = ChoiceSafe(self._connect_telebot)
         working: bool = self._choice_safe.work()
         if working:
-            self._next_function.set(self._work_choice_safe)
+            self._next_function.set(self._work_choice_safe)  # еще не выбрано, повторить
         else:
             self._work_choice_coin()  # далее выполнить
 
@@ -84,37 +86,19 @@ class OperationBank:
         if working:
             self._next_function.set(self._work_choice_coin)
         else:
-            self._input_amount_question()  # далее выполнить
+            self._work_choice_float()  # далее выполнить
 
-    def _input_amount_question(self):
+    def _work_choice_float(self):
         """
-        Режим вопроса, какой объем пополняется?
+        Команда сформировать coin
         """
-        logging.info(f'Режим вопроса объем пополнения')
-        self._connect_telebot.send_text(f'Введите объем пополнения:')
-        self._next_function.set(self._input_amount_answer)
-
-    def _input_amount_answer(self):
-        """
-        Режим проверка объема пополнения пользователя
-        :return:
-        """
-        logging.info(f'Режим проверки объема пополнения')
-        amount = self._isfloat(self._connect_telebot.message)
-        if amount:
-            self._task_rule.amount = amount
-            logging.info(f'Выбран объем - {self._task_rule.amount}')
-            self._input_fee_question()
+        if not self._choice_amount:
+            self._choice_amount = ChoiceFloat(self._connect_telebot, question_main='Введите объем пополнения:')
+        working: bool = self._choice_amount.work()
+        if working:
+            self._next_function.set(self._work_choice_float)  # еще не выбрано, повторить
         else:
-            self._connect_telebot.send_text('Невозможно преобразовать число.')
-            raise ExceptionOperationBank(f'Невозможно преобразовать число - {self._connect_telebot.message}')
-
-    def _isfloat(self, value_str: str) -> float:
-        try:
-            value_str = value_str.replace(',', '.')
-            return float(value_str)
-        except ValueError:
-            pass
+            self._input_fee_question()  # далее выполнить
 
     def _input_fee_question(self):
         """
