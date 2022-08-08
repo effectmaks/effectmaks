@@ -28,7 +28,7 @@ class TaskRule:
         self.coin: str = ""
         self.amount: float = 0
         self.fee: float = 0
-        self.id_task: int = 0
+        self._id_task: int = 0
         self.comment: str = ""
 
     def run(self):

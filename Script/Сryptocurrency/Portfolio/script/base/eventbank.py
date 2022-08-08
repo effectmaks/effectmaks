@@ -44,7 +44,7 @@ class ModelEventBank:
         """
 
         logging.info(
-            f'Добавление события банка id_task:{id_task} type:{type} '
+            f'Добавление события банка _id_task:{id_task} type:{type} '
             f'date_time_str:{date_time} id_cash_buy:{id_cash_buy} id_cash_sell:{id_cash_sell} '
             f'fee:{fee} comment:{comment}')
 
@@ -86,7 +86,7 @@ class ModelEventBank:
         try:
             bank_list = EventBank.select().where(EventBank.id_task == id_task)
             for bank in bank_list:
-                logging.info(f'Будет удалено в таблице {cls.__name_model}: {bank.id_task} type:{bank.type} '
+                logging.info(f'Будет удалено в таблице {cls.__name_model}: {bank._id_task} type:{bank.type} '
                     f'date_time_str:{bank.date_time} id_cash_buy:{bank.id_cash_buy} id_cash_sell:{bank.id_cash_sell} '
                     f'fee:{bank.fee} comment:{bank.comment}')
                 must_delete = True

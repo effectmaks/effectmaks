@@ -39,7 +39,7 @@ class ModelCash:
         """
         logging.info(
             f'Добавить счет id_safe_user:{id_safe_user}, date_time:{date_time}, coin:{coin}, amount_buy:{amount_buy}, '
-            f'price_buy_fiat:{price_buy_fiat}, id_task:{id_task}')
+            f'price_buy_fiat:{price_buy_fiat}, _id_task:{id_task}')
         try:
             id_cash = Cash.create(id_safe_user=id_safe_user,
                                   date_time=date_time,

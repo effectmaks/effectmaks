@@ -72,7 +72,7 @@ class ModelTask:
     @classmethod
     def set_delete_status(cls, id_task: int):
         """
-        Помечает статус задания с id_task как TaskStatus.DELETED
+        Помечает статус задания с _id_task как TaskStatus.DELETED
         :param id_user: ID юзера
         """
         cls._set_status(id_task=id_task, type_status=TaskStatus.DELETED)
@@ -80,7 +80,7 @@ class ModelTask:
     @classmethod
     def set_run_status(cls, id_task: int):
         """
-        Помечает статус задания с id_task как TaskStatus.DELETED
+        Помечает статус задания с _id_task как TaskStatus.DELETED
         :param id_user: ID юзера
         """
         cls._set_status(id_task=id_task, type_status=TaskStatus.RUN)
@@ -88,7 +88,7 @@ class ModelTask:
     @classmethod
     def set_completed_status(cls, id_task: int):
         """
-        Помечает статус задания с id_task как TaskStatus.DELETED
+        Помечает статус задания с _id_task как TaskStatus.DELETED
         :param id_user: ID юзера
         """
         cls._set_status(id_task=id_task, type_status=TaskStatus.COMPLETED)
@@ -96,7 +96,7 @@ class ModelTask:
     @classmethod
     def _set_status(cls, id_task: int, type_status: str):
         """
-        Помечает статус задания с id_task как type_status
+        Помечает статус задания с _id_task как type_status
         :param id_user: ID юзера
         :param type_status: Тип статуса
         """

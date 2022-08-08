@@ -27,13 +27,12 @@ class OperationBank:
         self._command_now = command_now
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(OperationBank.__name__)
-        self._simple_date: ChoiceDate = None
+        self._check_date_time: ChoiceDate = None
         self._choice_safe: ChoiceSafe = None
         self._choice_coin: ChoiceCoin = None
         self._choice_amount: ChoiceFloat = None
         self._choice_fee: ChoiceFloat = None
         self._choice_comment: ChoiceText = None
-        self._task_rule: TaskRule
 
     def work(self):
         """
@@ -49,9 +48,9 @@ class OperationBank:
         """
         Команда сформировать дату и время
         """
-        if not self._simple_date:
-            self._simple_date = ChoiceDate(self._connect_telebot)
-        working: bool = self._simple_date.work()
+        if not self._check_date_time:
+            self._check_date_time = ChoiceDate(self._connect_telebot)
+        working: bool = self._check_date_time.work()
         if working:
             self._next_function.set(self._work_simple_date)
         else:
@@ -61,7 +60,7 @@ class OperationBank:
         """
         Команда проверить наличие даты и времени
         """
-        if self._simple_date.result:
+        if self._check_date_time.result:
             logging.info('Выбрана дата и время')
             self._work_choice_safe()
         else:
@@ -131,5 +130,14 @@ class OperationBank:
         """
         Создание задания на создание счета юзера
         """
-        self._task_rule.run()
+        task_rule = TaskRule(self._connect_telebot.id_user, self._command_now)
+        task_rule.date_time = self._check_date_time.result
+        task_rule.safe_type = self._choice_safe.result.safe_type
+        task_rule.id_safe_user = self._choice_safe.result.id_safe
+        task_rule.safe_name = self._choice_safe.result.safe_name
+        task_rule.coin = self._choice_coin.result
+        task_rule.amount = self._choice_amount.result
+        task_rule.fee = self._choice_fee.result
+        task_rule.comment = self._choice_comment.result
+        task_rule.run()
         self._connect_telebot.send_text('Команда выполнена.')
