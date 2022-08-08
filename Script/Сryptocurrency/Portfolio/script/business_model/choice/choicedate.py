@@ -80,7 +80,10 @@ class ChoiceDate:
         """
         Режим вопрос пользователю введите дату и время перевода
         """
-        self._connect_telebot.send_text('Введите дату и время:')
+        if self._connect_telebot.debug:
+            self._connect_telebot.view_keyboard('Введите дату и время:', list_name=['04.05.2022 10.10.10'])
+        else:
+            self._connect_telebot.send_text('Введите дату и время:')
         self._next_function.set(self._input_date_time_answer)
 
     def _input_date_time_answer(self):

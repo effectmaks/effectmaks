@@ -1,4 +1,6 @@
 import logging
+import os
+
 from telebot import TeleBot, types
 
 
@@ -28,6 +30,20 @@ class ConnectTelebot:
         self._telebot = telebot
         self._id_user = id_user
         self.message: str = ''
+        self._debug: bool = False
+        self._ini_debug()
+
+    def _ini_debug(self):
+        try:
+            id_programmer = os.getenv('ID_programmer')
+            if str(self._id_user) == id_programmer:
+                self._debug = True
+        except Exception as err:
+            logging.warning('Невозможно инициализировать id_programmer')
+
+    @property
+    def debug(self) -> bool:
+        return self._debug
 
     def send_text(self, text_send: str):
         logging.info(f'Отправить текст юзеру ID {self._id_user}: "{text_send}"')
@@ -35,7 +51,7 @@ class ConnectTelebot:
         logging.info('Отправлено')
 
     @property
-    def id_user(self):
+    def id_user(self) -> int:
         return self._id_user
 
     def view_keyboard(self, text_keyboard: str, list_name: list = None, dict_name: dict = None):
