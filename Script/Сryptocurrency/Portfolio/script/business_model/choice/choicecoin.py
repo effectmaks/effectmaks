@@ -3,6 +3,7 @@ import logging
 from base.cash import ModelCash
 from base.coin import ModelCoin
 from business_model.nextfunction import NextFunction
+from business_model.questionYesNo import QuestionYesNo
 from telegram_bot.api.telegramApi import ConnectTelebot
 
 
@@ -18,7 +19,6 @@ class ChoiceCoin:
         self._next_function = NextFunction(ChoiceCoin.__name__)
         self._next_function.set(self._input_coin_question)  # первое что выполнит скрипт
         self._id_safe_user: int = id_safe_user
-        self._coin_list: list  # те монеты которые есть у юзера в id_safe_user
         self._result_coin: str = ""
         self._MODE_ADD = 'ДОБАВИТЬ'
 
@@ -44,13 +44,8 @@ class ChoiceCoin:
         if self._connect_telebot.message == self._MODE_ADD:
             self._create_coin_question()
         else:
-            if self._connect_telebot.message in self._coin_list:
-                self._result_coin = self._connect_telebot.message
-                logging.info(f'Выбрана монета "{self._result_coin}"')
-            else:
-                self._connect_telebot.send_text(f'Пункта "{self._connect_telebot.message}" нет в списке.')
-                raise ExceptionChoiceCoin(
-                    f'Пользователь выбрал пункт - "{self._connect_telebot.message}", он не из списка.')
+            self._result_coin = self._connect_telebot.message
+            logging.info(f'Выбрана монета "{self._result_coin}"')
 
     def _create_coin_question(self):
         """
