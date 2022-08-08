@@ -50,7 +50,7 @@ class ChoiceFloat:
             return
         result: bool = self._question_yes_no.result
         if result:
-            self._input_float_answer()  # повторить
+            self._input_float_question()  # повторить
         else:
             raise ExceptionChoiceFloat(f'Невозможно преобразовать число - {self._connect_telebot.message}')
 

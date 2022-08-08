@@ -30,6 +30,7 @@ class OperationBank:
         self._choice_safe: ChoiceSafe = None
         self._choice_coin: ChoiceCoin = None
         self._choice_amount: ChoiceFloat = None
+        self._choice_fee: ChoiceFloat = None
         self._task_rule: TaskRule
 
     def work(self):
@@ -90,7 +91,7 @@ class OperationBank:
 
     def _work_choice_float(self):
         """
-        Команда сформировать coin
+        Команда сформировать amount
         """
         if not self._choice_amount:
             self._choice_amount = ChoiceFloat(self._connect_telebot, question_main='Введите объем пополнения:')
@@ -98,30 +99,19 @@ class OperationBank:
         if working:
             self._next_function.set(self._work_choice_float)  # еще не выбрано, повторить
         else:
-            self._input_fee_question()  # далее выполнить
+            self._work_choice_fee()  # далее выполнить
 
-    def _input_fee_question(self):
+    def _work_choice_fee(self):
         """
-        Режим вопроса, какая комиссия снялась?
+        Команда сформировать fee
         """
-        logging.info(f'Режим вопроса комиссия')
-        self._connect_telebot.send_text(f'Введите комиссию:')
-        self._next_function.set(self._input_fee_answer)
-
-    def _input_fee_answer(self):
-        """
-        Режим проверка комиссия пользователя
-        :return:
-        """
-        logging.info(f'Режим проверки комиссии')
-        amount = self._isfloat(self._connect_telebot.message)
-        if amount:
-            self._task_rule.fee = amount
-            logging.info(f'Введена комиссия - {self._task_rule.fee}')
-            self._input_comment_question()
+        if not self._choice_fee:
+            self._choice_fee = ChoiceFloat(self._connect_telebot, question_main='Введите объем комиссии:')
+        working: bool = self._choice_fee.work()
+        if working:
+            self._next_function.set(self._work_choice_fee)  # еще не выбрано, повторить
         else:
-            self._connect_telebot.send_text('Невозможно преобразовать число.')
-            raise ExceptionOperationBank(f'Невозможно преобразовать число - {self._connect_telebot.message}')
+            self._input_comment_question()  # далее выполнить
 
     def _input_comment_question(self):
         """
