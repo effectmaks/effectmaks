@@ -42,7 +42,7 @@ class ModelSafeuser:
             for sel in list_safe:
                 if sel.count_safe == 1:
                     logging.info(f'В таблице {cls.__name_model} у ID юзера:{id_user} '
-                                    f'уже есть ID сейф:{id_safe}')
+                                 f'уже есть ID сейф:{id_safe}')
                     return True  # сейф есть
                 elif sel.count_safe > 1:
                     logging.warning(f'В таблице {cls.__name_model} у ID юзера:{id_user} больше одного '
@@ -90,7 +90,8 @@ class ModelSafeuser:
         try:
             safes_user = Safeuser.select(Safeuser.id, Safelist.name)\
                                        .join(Safelist, on=(Safelist.id == Safeuser.id_safe))\
-                                       .where(Safeuser.id_user == id_user, Safelist.type == type_name)
+                                       .where(Safeuser.id_user == id_user, Safelist.type == type_name)\
+                                       .order_by(Safelist.name)
             if safes_user:
                 for sel in safes_user:
                     dict_out[sel.safelist.name] = sel.id
