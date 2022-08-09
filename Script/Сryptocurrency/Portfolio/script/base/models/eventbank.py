@@ -3,7 +3,7 @@ from datetime import datetime
 
 from peewee import DateTimeField, IntegerField, DoubleField, TextField, Model
 
-from .sqlite.connectSqlite import ConnectSqlite, ExceptionInsert, ExceptionSelect, ExceptionDelete
+from base.sqlite.connectSqlite import ConnectSqlite, ExceptionInsert, ExceptionSelect, ExceptionDelete
 
 
 class EventBank(Model):

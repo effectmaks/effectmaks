@@ -3,7 +3,7 @@ from datetime import datetime
 
 from peewee import TextField, IntegerField, DateTimeField, Model
 
-from .sqlite.connectSqlite import ConnectSqlite, ExceptionSelect, ExceptionInsert
+from base.sqlite.connectSqlite import ConnectSqlite, ExceptionSelect, ExceptionInsert
 
 
 class TaskStatus:

@@ -1,6 +1,6 @@
 import logging
 from peewee import DateTimeField, IntegerField, Model, fn
-from .sqlite.connectSqlite import ConnectSqlite, ExceptionInsert, ExceptionSelect
+from base.sqlite.connectSqlite import ConnectSqlite, ExceptionInsert, ExceptionSelect
 from datetime import datetime
 from .safelist import Safelist
 

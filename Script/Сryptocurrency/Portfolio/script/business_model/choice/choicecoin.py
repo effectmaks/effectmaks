@@ -1,9 +1,8 @@
 import logging
 
-from base.cash import ModelCash
-from base.coin import ModelCoin
+from base.models.cash import ModelCash
+from base.models.coin import ModelCoin
 from business_model.nextfunction import NextFunction
-from business_model.questionYesNo import QuestionYesNo
 from telegram_bot.api.telegramApi import ConnectTelebot
 
 

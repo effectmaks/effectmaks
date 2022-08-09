@@ -1,6 +1,6 @@
 import logging
 from peewee import TextField, IntegerField, Model, fn
-from .sqlite.connectSqlite import ConnectSqlite, ExceptionSelect, ExceptionInsert
+from base.sqlite.connectSqlite import ConnectSqlite, ExceptionSelect, ExceptionInsert
 
 
 class Safetypes:

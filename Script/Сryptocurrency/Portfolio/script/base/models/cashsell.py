@@ -1,6 +1,6 @@
 import logging
 from peewee import DateTimeField, IntegerField, DoubleField, Model
-from .sqlite.connectSqlite import ConnectSqlite, ExceptionInsert
+from base.sqlite.connectSqlite import ConnectSqlite, ExceptionInsert
 from business_model.choice.choicedate import ChoiceDate
 
 

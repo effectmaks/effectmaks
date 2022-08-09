@@ -1,9 +1,9 @@
 import logging
 from datetime import datetime
 
-from base.cash import ModelCash
-from base.eventbank import ModelEventBank
-from base.task import ModelTask, TaskStatus
+from base.models.cash import ModelCash
+from base.models.eventbank import ModelEventBank
+from base.models.task import ModelTask, TaskStatus
 from telegram_bot.api.commandsWork import CommandsWork
 
 
