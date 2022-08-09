@@ -7,6 +7,11 @@ from business_model.questionYesNo import QuestionYesNo
 from telegram_bot.api.telegramApi import ConnectTelebot
 
 
+class ModesChoiceSafe:
+    CREATE: str = 'NO_CREATE'
+    VIEW: str = 'VIEW'
+
+
 class ExceptionChoiceSafe(Exception):
     def __init__(self, err_message: str = ''):
         logging.error(f'Класс {ExceptionChoiceSafe.__name__} - {err_message}')
@@ -26,12 +31,13 @@ class ChoiceSafeResult:
 
 
 class ChoiceSafe:
-    def __init__(self, connect_telebot: ConnectTelebot):
+    def __init__(self, connect_telebot: ConnectTelebot, mode_now: str):
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(ChoiceSafe.__name__)
         self._next_function.set(self._input_safe_type)  # первое что выполнит скрипт
         self._result = ChoiceSafeResult() # класс хранит результат выбора пользователя
         self._MODE_ADD = 'ДОБАВИТЬ'
+        self._mode_now = mode_now
 
     def _input_safe_type(self):
         """
@@ -76,7 +82,8 @@ class ChoiceSafe:
         safes_dict = ModelSafeuser.get_dict(self._connect_telebot.id_user, type_name=self._result.safe_type)
         if not safes_dict:
             safes_dict = {}
-        safes_dict[self._MODE_ADD] = self._MODE_ADD
+        if self._mode_now == ModesChoiceSafe.CREATE:
+            safes_dict[self._MODE_ADD] = self._MODE_ADD
         self._dict_safes_user = safes_dict
         self._connect_telebot.view_keyboard('Выберите сейф:', dict_name=safes_dict)
         self._next_function.set(self._input_safe_list_check)
@@ -92,10 +99,9 @@ class ChoiceSafe:
             id_safe = self._dict_safes_user.get(self._connect_telebot.message)
             if id_safe:
                 self._result.safe_name = self._connect_telebot.message
-                self._result.id_safe_user = id_safe
-                logging.info(f'Выбран сейф ID_safe_user:{self._result.id_safe_user} name:"{self._result.safe_name}"')
+                self._result.id_safe = id_safe
+                logging.info(f'Выбран сейф ID_safe_user:{self._result.id_safe} name:"{self._result.safe_name}"')
             else:
-                self._connect_telebot.send_text(f'Такого сейфа "{self._connect_telebot.message}" нет в списке.')
                 self._question_yes_no = QuestionYesNo(self._connect_telebot,
                                                       f'"{self._connect_telebot.message}" - сейфа нет в списке.')
                 self._wait_answer_repeat_id_safe()
@@ -103,14 +109,13 @@ class ChoiceSafe:
     def _wait_answer_repeat_id_safe(self):
         b_working = self._question_yes_no.work()
         if b_working:
-            self._next_function.set(self._input_safe_list)
+            self._next_function.set(self._wait_answer_repeat_id_safe)
             return
         result: bool = self._question_yes_no.result
         if result:
             self._input_safe_type_check()  # Повторить
         else:
             raise ExceptionChoiceSafe('Юзер отказался выбирать сейф.')
-
 
     def _create_safe_question(self):
         """
@@ -127,7 +132,7 @@ class ChoiceSafe:
         logging.info(f'Режим проверки названия сейфа "{self._connect_telebot.message}"')
         message_str = self._connect_telebot.message.upper()
         id_safelist = ModelSafelist.command_create(message_str, self._result.safe_type)
-        self._result.id_safe_user = ModelSafeuser.command_create(self._connect_telebot.id_user, id_safelist)
+        self._result.id_safe = ModelSafeuser.command_create(self._connect_telebot.id_user, id_safelist)
         self._result.safe_name = message_str
         self._connect_telebot.send_text(f'Добавлен новый сейф "{message_str}" с типом {self._result.safe_type}.')
 
