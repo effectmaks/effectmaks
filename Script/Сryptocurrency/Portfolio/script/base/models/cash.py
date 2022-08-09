@@ -1,7 +1,16 @@
 import logging
+from typing import Dict
 from peewee import DateTimeField, IntegerField, DoubleField, TextField, Model
 from base.sqlite.connectSqlite import ConnectSqlite, ExceptionInsert, ExceptionSelect, ExceptionDelete
 from datetime import datetime
+
+
+class CashItem:
+    def __init__(self, id: int, coin: str, amount: float):
+        self.id = id
+        self.coin = coin
+        self.amount = amount
+
 
 class Cash(Model):
     """
@@ -117,5 +126,26 @@ class ModelCash:
         except Exception as err:
             raise ExceptionDelete(cls.__name_model, str(err))
 
+    @classmethod
+    def list_amount(cls, id_safe_user: int) -> Dict:
+        """
 
+        :param id_safe_user:
+        :return:
+        """
+        logging.info('Запрос объема монет у сейфа.')
+        try:
+            dict_out = {}
+            connect = ConnectSqlite.get_connect()
+            cash_list = connect.execute_sql('select cash.id_safe_user, cash.coin, (cash.amount_buy - CASE WHEN '
+                                            'sum_cash_sell.amount IS NULL THEN 0 else sum_cash_sell.amount end) '
+                                            'as amount from cash left join (select id_cash, sum(amount_sell) as '
+                                            'amount from cashsell group by id_cash) as sum_cash_sell on cash.id = '
+                                            'sum_cash_sell.id_cash where cash.id_safe_user = {}'.format(id_safe_user))
+            for cash in cash_list:
+                dict_out[cash[0]] = CashItem(id=cash[0], coin=cash[1], amount=cash[2])
+            logging.info('Запрос выполнен')
+            return dict_out
+        except Exception as err:
+            raise ExceptionSelect(cls.__name_model, str(err))
 
