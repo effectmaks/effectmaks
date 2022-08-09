@@ -11,20 +11,20 @@ from business_model.choice.choicedate import ChoiceDate
 from business_model.choice.choicesafe import ChoiceSafe, ModesChoiceSafe
 
 
-class ExceptionScriptBankInput(Exception):
+class ExceptionScriptBankOutput(Exception):
     def __init__(self, err_message: str = ''):
-        logging.error(f'Класс {ExceptionScriptBankInput.__name__} - {err_message}')
+        logging.error(f'Класс {ExceptionScriptBankOutput.__name__} - {err_message}')
         super().__init__(err_message)
 
 
-class ScriptBankInput:
+class ScriptBankOutput:
     """
     Операции ввода, вывода и конвертации средств
     """
     def __init__(self, connect_telebot: ConnectTelebot):
         logging.info('Создание объекта OperationBank')
         self._connect_telebot = connect_telebot
-        self._next_function = NextFunction(ScriptBankInput.__name__)
+        self._next_function = NextFunction(ScriptBankOutput.__name__)
         self._next_function.set(self._work_simple_date)
         self._check_date_time: ChoiceDate = None
         self._choice_safe: ChoiceSafe = None
@@ -58,7 +58,7 @@ class ScriptBankInput:
         Команда сформировать id_safe_user
         """
         if not self._choice_safe:
-            self._choice_safe = ChoiceSafe(self._connect_telebot, ModesChoiceSafe.CREATE)
+            self._choice_safe = ChoiceSafe(self._connect_telebot, ModesChoiceSafe.VIEW)
         working: bool = self._choice_safe.work()
         if working:
             self._next_function.set(self._work_choice_safe)  # еще не выбрано, повторить

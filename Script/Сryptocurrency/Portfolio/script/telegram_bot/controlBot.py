@@ -34,12 +34,15 @@ class ControlBot:
         if self._connect_telebot.message == CommandsWork.COMMAND_INPUT:
             self._command_now = CommandsWork.COMMAND_INPUT
             self._operation_bank = OperationBank(self._connect_telebot, self._command_now)
+        elif self._connect_telebot.message == CommandsWork.COMMAND_OUTPUT:
+            self._command_now = CommandsWork.COMMAND_OUTPUT
+            self._operation_bank = OperationBank(self._connect_telebot, self._command_now)
 
-        if self._command_now == CommandsWork.COMMAND_INPUT:
+        if self._command_now == CommandsWork.COMMAND_INPUT or self._command_now == CommandsWork.COMMAND_OUTPUT:
             try:
                 self._operation_bank.work()
             except Exception as err:
-                logging.error(f'_input_mode: {str(err)}')
+                logging.error(f'{self._input_mode.__name__}: {str(err)}')
                 self._connect_telebot.send_text(f'Команда {self._command_now} завершена не успешно.')
                 self._command_now = CommandsWork.NONE
             return True
@@ -75,5 +78,6 @@ class ControlBot:
         """
         logging.info(f'Режим: Помощь')
         text_send = f'{self.__NAME_BOT} выполняет команды: \n' \
-                    f'{CommandsWork.COMMAND_INPUT} - пополнить счет'
+                    f'{CommandsWork.COMMAND_INPUT} - пополнить счет \n' \
+                    f'{CommandsWork.COMMAND_OUTPUT} - снять со счета'
         self._connect_telebot.send_text(text_send)

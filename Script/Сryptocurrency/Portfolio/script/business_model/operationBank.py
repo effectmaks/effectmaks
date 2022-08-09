@@ -1,6 +1,7 @@
 import logging
 
 from business_model.modes.scriptBankInput import ScriptBankInput
+from business_model.modes.scriptBankOutput import ScriptBankOutput
 from telegram_bot.api.commandsWork import CommandsWork
 from telegram_bot.api.telegramApi import ConnectTelebot
 
@@ -16,10 +17,11 @@ class OperationBank:
     Операции ввода, вывода и конвертации средств
     """
     def __init__(self, connect_telebot: ConnectTelebot, command_now: str):
-        logging.info('Создание объекта OperationBank')
+        logging.info(f'Создание объекта {OperationBank.__name__}')
         self._command_now = command_now
         self._connect_telebot = connect_telebot
         self._script_bank_input = ScriptBankInput(self._connect_telebot)
+        self._script_bank_output = ScriptBankOutput(self._connect_telebot)
 
     def work(self):
         """
@@ -27,3 +29,5 @@ class OperationBank:
         """
         if self._command_now == CommandsWork.COMMAND_INPUT:
             self._script_bank_input.work()
+        elif self._command_now == CommandsWork.COMMAND_OUTPUT:
+            self._script_bank_output.work()
