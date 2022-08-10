@@ -20,7 +20,7 @@ class ChoiceDate:
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(ChoiceDate.__name__)
         self._next_function.set(self._input_date_time_question)   # первое что выполнит скрипт
-        self._date_time: datetime = None
+        self._result: datetime = None
         self._question_yes_no: QuestionYesNo
 
     @classmethod
@@ -81,7 +81,7 @@ class ChoiceDate:
         Режим вопрос пользователю введите дату и время перевода
         """
         if self._connect_telebot.debug:
-            self._connect_telebot.view_keyboard('Введите дату и время:', list_name=['04.05.2022 10.10.10'])
+            self._connect_telebot.view_keyboard('Введите дату и время:', list_view=['04.05.2022 10.10.10'])
         else:
             self._connect_telebot.send_text('Введите дату и время:')
         self._next_function.set(self._input_date_time_answer)
@@ -91,8 +91,8 @@ class ChoiceDate:
         Режим проверки даты и времени
         """
         try:
-            self._date_time = ChoiceDate.convert(self._connect_telebot.message)
-            logging.info(f'Преобразована дата - {self._date_time}')
+            self._result = ChoiceDate.convert(self._connect_telebot.message)
+            logging.info(f'Преобразована дата - {self._result}')
         except Exception as err:
             logging.info(f'Невозможно преобразовать дату и время - "{self._connect_telebot.message}"')
             self._question_yes_no = QuestionYesNo(self._connect_telebot, "Ошибка преобразования даты")
@@ -111,11 +111,11 @@ class ChoiceDate:
 
     @property
     def result(self):
-        return self._date_time
+        return self._result
 
     def work(self) -> bool:
         self._next_function.work()
-        if not self.result:
+        if not self._result:
             return True
 
 

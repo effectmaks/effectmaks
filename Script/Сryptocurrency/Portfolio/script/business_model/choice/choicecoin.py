@@ -31,7 +31,7 @@ class ChoiceCoin:
             coin_list = []
         coin_list.append(self._MODE_ADD)
         self._coin_list = coin_list
-        self._connect_telebot.view_keyboard('Выберите монету/валюту:', list_name=self._coin_list)
+        self._connect_telebot.view_keyboard('Выберите монету/валюту:', list_view=self._coin_list)
         self._next_function.set(self._input_coin_answer)
 
     def _input_coin_answer(self):
@@ -52,7 +52,7 @@ class ChoiceCoin:
         """
         logging.info(f'Режим создания монеты.')
         coin_list = ModelCoin.get_list()
-        self._connect_telebot.view_keyboard('Напишите или выберите монету/валюту:', list_name=coin_list)
+        self._connect_telebot.view_keyboard('Напишите или выберите монету/валюту:', list_view=coin_list)
         self._next_function.set(self._create_coin_answer)
 
     def _create_coin_answer(self):

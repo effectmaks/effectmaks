@@ -45,7 +45,7 @@ class ChoiceSafe:
         """
         logging.info(f'Режим задать вопрос, какой тип сейфа?')
         list_name: list = Safetypes.get_list()
-        self._connect_telebot.view_keyboard('Выберите тип сейфа:', list_name=list_name)
+        self._connect_telebot.view_keyboard('Выберите тип сейфа:', list_view=list_name)
         self._next_function.set(self._input_safe_type_check)
         self._question_yes_no: QuestionYesNo
 
@@ -85,7 +85,7 @@ class ChoiceSafe:
         if self._mode_now == ModesChoiceSafe.CREATE:
             safes_dict[self._MODE_ADD] = self._MODE_ADD
         self._dict_safes_user = safes_dict
-        self._connect_telebot.view_keyboard('Выберите сейф:', dict_name=safes_dict)
+        self._connect_telebot.view_keyboard('Выберите сейф:', dict_view=safes_dict)
         self._next_function.set(self._input_safe_list_check)
 
     def _input_safe_list_check(self):

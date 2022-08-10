@@ -60,24 +60,24 @@ class ConnectTelebot:
     def id_user(self) -> int:
         return self._id_user
 
-    def view_keyboard(self, text_keyboard: str, list_name: list = None, dict_name: dict = None):
+    def view_keyboard(self, text_keyboard: str, list_view: list = None, dict_view: dict = None):
         """
         Создание списка кнопок для юзера
         :param dict_text: Словарь с названиями кнопок
         :param text_keyboard: Вопрос для пользователя
         """
         try:
-            if list_name:
-                logging.info(f'Показать клавиатуру {text_keyboard}-{list_name}')
+            if list_view:
+                logging.info(f'Показать клавиатуру {text_keyboard}-{list_view}')
             else:
-                logging.info(f'Показать клавиатуру {text_keyboard}-{dict_name.values()}')
+                logging.info(f'Показать клавиатуру {text_keyboard}-{dict_view.keys()}')
             keyboard = types.InlineKeyboardMarkup()  # клавиатура
-            if list_name:
-                for value in list_name:
+            if list_view:
+                for value in list_view:
                     key = types.InlineKeyboardButton(text=value, callback_data=value)
                     keyboard.add(key)  # добавляем кнопку
             else:
-                for value in dict_name.keys():
+                for value in dict_view.keys():
                     key = types.InlineKeyboardButton(text=value, callback_data=value)
                     keyboard.add(key)  # добавляем кнопку
             self._telebot.send_message(self._id_user, text=text_keyboard, reply_markup=keyboard)

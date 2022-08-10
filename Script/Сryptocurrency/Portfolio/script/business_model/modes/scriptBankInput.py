@@ -25,7 +25,7 @@ class ScriptBankInput:
         logging.info('Создание объекта OperationBank')
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(ScriptBankInput.__name__)
-        self._next_function.set(self._work_simple_date)
+        self._next_function.set(self._work_choice_date)
         self._check_date_time: ChoiceDate = None
         self._choice_safe: ChoiceSafe = None
         self._choice_coin: ChoiceCoin = None
@@ -40,7 +40,7 @@ class ScriptBankInput:
         if self._next_function.work():  # функция выполнилась
             return
 
-    def _work_simple_date(self):
+    def _work_choice_date(self):
         """
         Команда сформировать дату и время
         """
@@ -48,7 +48,7 @@ class ScriptBankInput:
             self._check_date_time = ChoiceDate(self._connect_telebot)
         working: bool = self._check_date_time.work()
         if working:
-            self._next_function.set(self._work_simple_date)
+            self._next_function.set(self._work_choice_date)
         else:
             logging.info('Выбран date_time')
             self._work_choice_safe()
@@ -77,9 +77,9 @@ class ScriptBankInput:
             self._next_function.set(self._work_choice_coin)
         else:
             logging.info('Выбран coin')
-            self._work_choice_float()  # далее выполнить
+            self._work_choice_amount()  # далее выполнить
 
-    def _work_choice_float(self):
+    def _work_choice_amount(self):
         """
         Команда сформировать amount
         """
@@ -87,7 +87,7 @@ class ScriptBankInput:
             self._choice_amount = ChoiceFloat(self._connect_telebot, question_main='Введите объем пополнения:')
         working: bool = self._choice_amount.work()
         if working:
-            self._next_function.set(self._work_choice_float)  # еще не выбрано, повторить
+            self._next_function.set(self._work_choice_amount)  # еще не выбрано, повторить
         else:
             logging.info('Выбран amount')
             self._work_choice_fee()  # далее выполнить
