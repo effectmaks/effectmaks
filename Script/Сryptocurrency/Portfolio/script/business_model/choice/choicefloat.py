@@ -12,9 +12,10 @@ class ExceptionChoiceFloat(Exception):
 
 
 class ChoiceFloat:
-    def __init__(self, connect_telebot: ConnectTelebot, question_main: str, ):
+    def __init__(self, connect_telebot: ConnectTelebot, question_main: str, max_number: float = 0):
         self._connect_telebot = connect_telebot
         self._question_main = question_main
+        self._max_number = max_number
         self._next_function = NextFunction(ChoiceFloat.__name__)
         self._next_function.set(self._input_float_question)  # первое что выполнит скрипт
         self._result_float: float = 0
@@ -36,12 +37,25 @@ class ChoiceFloat:
         logging.info(f'Режим проверки ответа на - {self._question_main}')
         result_float = self._isfloat(self._connect_telebot.message)
         if result_float:
-            self._result_float = result_float
-            logging.info(f'Выбрано число - {self._result_float}')
+            if self._check_min_max(result_float):
+                self._result_float = result_float
+                logging.info(f'Выбрано число - {self._result_float}')
+            else:
+                logging.info(f'Число должно быть от 0 до {self._max_number}.')
+                self._err__float_answer(f'Число должно быть от 0 до {self._max_number}.')
         else:
             logging.info('Невозможно преобразовать число.')
-            self._question_yes_no = QuestionYesNo(self._connect_telebot, "Ошибка преобразования числа.")
-            self._wait_answer_repeat()
+            self._err__float_answer("Ошибка преобразования числа.")
+
+    def _err__float_answer(self, message_err: str):
+        self._question_yes_no = QuestionYesNo(self._connect_telebot, message_err)
+        self._wait_answer_repeat()
+
+    def _check_min_max(self, result: float) -> bool:
+        if not self._max_number:
+            return True
+        if 0 < result <= self._max_number:
+            return True
 
     def _wait_answer_repeat(self):
         b_working = self._question_yes_no.work()
