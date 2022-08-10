@@ -48,7 +48,7 @@ class TaskRule:
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
                                              status=TaskStatus.RUN)
             id_cash_buy = ModelCash.add(id_safe_user=self.id_safe_user, date_time=self.date_time, coin=self.coin,
-                                        amount_buy=self.amount, price_buy_fiat=0, id_task=self._id_task)
+                                        amount_buy=self.amount, id_task=self._id_task)
             ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=datetime.now(),
                                id_cash_buy=id_cash_buy, fee=self.fee, comment=self.comment)
             ModelTask.set_completed_status(self._id_task)

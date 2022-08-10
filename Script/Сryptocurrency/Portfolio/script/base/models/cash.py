@@ -33,7 +33,7 @@ class ModelCash:
 
     @classmethod
     def add(cls, id_safe_user: int = 0, date_time: datetime = None, coin: str = "", amount_buy: float = 0,
-                 price_buy: float = 0, id_task: int = 0) -> int:
+            price_buy: float = 0, id_task: int = 0) -> int:
         """
         Добавление счета покупки/конвертирование монеты(средства).
         Исключения: конвертации даты, добавления записи.
@@ -103,8 +103,8 @@ class ModelCash:
             cash_list = Cash.select().where(Cash.id_task == id_task)
             for cash in cash_list:
                 logging.info(f'Будет удалено в таблице {cls.__name_model}: счет id_safe:{cash.id_safe_user}, '
-                                f'date_time:{cash.date_time}, coin:{cash.coin}, amount_buy:{cash.amount_buy}, '
-                                f'price_buy:{cash.price_buy}')
+                             f'date_time:{cash.date_time}, coin:{cash.coin}, amount_buy:{cash.amount_buy}, '
+                             f'price_buy:{cash.price_buy}')
                 must_delete = True
             return must_delete
         except Exception as err:
@@ -146,4 +146,3 @@ class ModelCash:
             return dict_out
         except Exception as err:
             raise ExceptionSelect(cls.__name_model, str(err))
-

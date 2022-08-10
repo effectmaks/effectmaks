@@ -140,7 +140,7 @@ class ScriptBankOutput:
         task_rule.date_time = self._check_date_time.result
         task_rule.id_cash = self._choice_cash.result.id_cash
         task_rule.id_safe_user = self._choice_safe.result.id_safe
-        task_rule.amount = self._choice_amount_second.result
+        task_rule.amount = self._choice_amount_first.result
         task_rule.fee = self._fee
         task_rule.comment = self._choice_comment.result
         task_rule.run()
