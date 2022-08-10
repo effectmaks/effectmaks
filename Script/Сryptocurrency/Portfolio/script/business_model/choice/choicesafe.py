@@ -93,7 +93,7 @@ class ChoiceSafe:
         Проверка какой сейф выбрали с типом self._task_rule.safe_type.
         Или переход на шаг создания нового сейфа с типом self._task_rule.safe_type.
         """
-        if self._connect_telebot.message == self._MODE_ADD:
+        if self._connect_telebot.message == self._MODE_ADD and self._mode_now == ModesChoiceSafe.CREATE:
             self._create_safe_question()
         else:
             id_safe = self._dict_safes_user.get(self._connect_telebot.message)
