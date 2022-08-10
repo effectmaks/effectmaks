@@ -6,8 +6,7 @@ from datetime import datetime
 
 
 class CashItem:
-    def __init__(self, id: int, coin: str, amount: float):
-        self.id = id
+    def __init__(self, coin: str, amount: float):
         self.coin = coin
         self.amount = amount
 
@@ -21,7 +20,7 @@ class Cash(Model):
     id_safe_user = IntegerField()
     coin = TextField()
     amount_buy = DoubleField(default=0)
-    price_buy_fiat = DoubleField(default=0)
+    price_buy = DoubleField(default=0)
     id_task = IntegerField()
 
     class Meta:
@@ -34,7 +33,7 @@ class ModelCash:
 
     @classmethod
     def add(cls, id_safe_user: int = 0, date_time: datetime = None, coin: str = "", amount_buy: float = 0,
-                 price_buy_fiat: float = 0, id_task: int = 0) -> int:
+                 price_buy: float = 0, id_task: int = 0) -> int:
         """
         Добавление счета покупки/конвертирование монеты(средства).
         Исключения: конвертации даты, добавления записи.
@@ -43,18 +42,18 @@ class ModelCash:
         :param date_time: Дата и время добавления
         :param coin: Монета
         :param amount_buy: Количество купить
-        :param price_buy_fiat: Цена покупки
+        :param price_buy: Цена покупки
         :param id_task: ID задания
         """
         logging.info(
             f'Добавить счет id_safe_user:{id_safe_user}, date_time:{date_time}, coin:{coin}, amount_buy:{amount_buy}, '
-            f'price_buy_fiat:{price_buy_fiat}, _id_task:{id_task}')
+            f'price_buy:{price_buy}, _id_task:{id_task}')
         try:
             id_cash = Cash.create(id_safe_user=id_safe_user,
                                   date_time=date_time,
                                   coin=coin,
                                   amount_buy=amount_buy,
-                                  price_buy_fiat=price_buy_fiat,
+                                  price_buy=price_buy,
                                   id_task=id_task)
             logging.info(f'Новый счет ID:{id_cash}')
             return id_cash
@@ -105,7 +104,7 @@ class ModelCash:
             for cash in cash_list:
                 logging.info(f'Будет удалено в таблице {cls.__name_model}: счет id_safe:{cash.id_safe_user}, '
                                 f'date_time:{cash.date_time}, coin:{cash.coin}, amount_buy:{cash.amount_buy}, '
-                                f'price_buy_fiat:{cash.price_buy_fiat}')
+                                f'price_buy:{cash.price_buy}')
                 must_delete = True
             return must_delete
         except Exception as err:
@@ -115,8 +114,7 @@ class ModelCash:
     def _must_delete_task(cls, id_task: int = 0):
         """
         Удалить записи - Task.status == TaskStatus.RUN
-        :param id_user: ID юзера
-        :return: True - есть что удалить.
+        :param id_task: ID задания
         """
         logging.info('Удалить записи со статусом TaskStatus.RUN.')
         try:
@@ -127,23 +125,23 @@ class ModelCash:
             raise ExceptionDelete(cls.__name_model, str(err))
 
     @classmethod
-    def list_amount(cls, id_safe_user: int) -> Dict:
+    def dict_amount(cls, id_safe_user: int) -> Dict:
         """
-
-        :param id_safe_user:
-        :return:
+        Запрос объема все счетов у сейфа
+        :param id_safe_user: ID сейфа юзера
+        :return: Словарь со счетами их названиями объемом и ID
         """
-        logging.info('Запрос объема монет у сейфа.')
+        logging.info('Запрос объема все счетов у сейфа.')
         try:
             dict_out = {}
             connect = ConnectSqlite.get_connect()
-            cash_list = connect.execute_sql('select cash.id_safe_user, cash.coin, (cash.amount_buy - CASE WHEN '
+            cash_list = connect.execute_sql('select cash.id, cash.coin, (cash.amount_buy - CASE WHEN '
                                             'sum_cash_sell.amount IS NULL THEN 0 else sum_cash_sell.amount end) '
                                             'as amount from cash left join (select id_cash, sum(amount_sell) as '
                                             'amount from cashsell group by id_cash) as sum_cash_sell on cash.id = '
                                             'sum_cash_sell.id_cash where cash.id_safe_user = {}'.format(id_safe_user))
             for cash in cash_list:
-                dict_out[cash[0]] = CashItem(id=cash[0], coin=cash[1], amount=cash[2])
+                dict_out[cash[0]] = CashItem(coin=cash[1], amount=cash[2])
             logging.info('Запрос выполнен')
             return dict_out
         except Exception as err:
