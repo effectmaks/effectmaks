@@ -11,6 +11,7 @@ class ChoiceCashResult:
     def __init__(self):
         self.max_number: float = 0
         self.id_cash: int = 0
+        self.coin: str = ""
 
     def __bool__(self) -> bool:
         if self.id_cash != 0 and self.max_number != 0:
@@ -25,10 +26,11 @@ class ExceptionChoiceCash(Exception):
 
 
 class ChoiceCash:
-    def __init__(self, connect_telebot: ConnectTelebot, id_safe_user: int):
+    def __init__(self, connect_telebot: ConnectTelebot, id_safe_user: int, message: str):
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(ChoiceCash.__name__)
         self._next_function.set(self._question_choice_cash)  # первое что выполнит скрипт
+        self._message_str: str = message
         self._dict_view: Dict
         self._dict_cash: Dict
 
@@ -42,7 +44,7 @@ class ChoiceCash:
         logging.info('Режим показать счета у сейфа')
         self._dict_cash: Dict = ModelCash.dict_amount(self._id_safe_user)
         self._dict_view: Dict = {f'{item.coin}: {item.amount}': id for id, item in self._dict_cash.items()}
-        self._connect_telebot.view_keyboard('Выберите счет вывода:', dict_view=self._dict_view)
+        self._connect_telebot.view_keyboard(self._message_str, dict_view=self._dict_view)
         self._next_function.set(self._answer_choice_cash)
 
     def _answer_choice_cash(self):
@@ -57,6 +59,7 @@ class ChoiceCash:
                 logging.info(f'Выбран id_cash: {id_cash}')
                 self._result.id_cash = id_cash
                 self._result.max_number = self._dict_cash.get(id_cash).amount
+                self._result.coin = self._dict_cash.get(id_cash).coin
             else:
                 self._err_answer_choice_cash()
         except Exception as err:

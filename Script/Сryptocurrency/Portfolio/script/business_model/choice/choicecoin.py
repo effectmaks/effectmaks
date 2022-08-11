@@ -13,13 +13,14 @@ class ExceptionChoiceCoin(Exception):
 
 
 class ChoiceCoin:
-    def __init__(self, connect_telebot: ConnectTelebot, id_safe_user: int):
+    def __init__(self, connect_telebot: ConnectTelebot, id_safe_user: int, message: str):
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(ChoiceCoin.__name__)
         self._next_function.set(self._input_coin_question)  # первое что выполнит скрипт
         self._id_safe_user: int = id_safe_user
         self._result_coin: str = ""
         self._MODE_ADD = 'ДОБАВИТЬ'
+        self._message_str = message
 
     def _input_coin_question(self):
         """
@@ -31,7 +32,7 @@ class ChoiceCoin:
             coin_list = []
         coin_list.append(self._MODE_ADD)
         self._coin_list = coin_list
-        self._connect_telebot.view_keyboard('Выберите монету/валюту:', list_view=self._coin_list)
+        self._connect_telebot.view_keyboard(self._message_str, list_view=self._coin_list)
         self._next_function.set(self._input_coin_answer)
 
     def _input_coin_answer(self):
@@ -52,7 +53,7 @@ class ChoiceCoin:
         """
         logging.info(f'Режим создания монеты.')
         coin_list = ModelCoin.get_list()
-        self._connect_telebot.view_keyboard('Напишите или выберите монету/валюту:', list_view=coin_list)
+        self._connect_telebot.view_keyboard('Выберите монету/валюту или напишите:', list_view=coin_list)
         self._next_function.set(self._create_coin_answer)
 
     def _create_coin_answer(self):

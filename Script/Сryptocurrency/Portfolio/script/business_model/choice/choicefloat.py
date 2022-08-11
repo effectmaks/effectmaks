@@ -35,7 +35,8 @@ class ChoiceFloat:
         :return:
         """
         logging.info(f'Режим проверки ответа на - {self._question_main}')
-        result_float = self._isfloat(self._connect_telebot.message)
+        message: str = self._connect_telebot.message
+        result_float = self._isfloat(message) or message == '0'
         if result_float:
             if self._check_min_max(result_float):
                 self._result_float = result_float
