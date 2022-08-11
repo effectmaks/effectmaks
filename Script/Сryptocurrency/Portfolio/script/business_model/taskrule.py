@@ -29,6 +29,8 @@ class TaskRule:
         self.id_cash: int = 0
         self.coin: str = ""
         self.amount: float = 0
+        self.amount_sell: float = 0
+        self.price_avr: float = 0
         self.fee: float = 0
         self._id_task: int = 0
         self.comment: str = ""
@@ -62,6 +64,23 @@ class TaskRule:
         try:
             desc = f"Снять cash date_time:{self.date_time},  id_cash:{self.id_cash}, " \
                    f"id_safe_user:{self.id_safe_user}, amount:{self.amount}, fee:{self.fee}, comment:{self.comment}"
+            self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
+                                             status=TaskStatus.RUN)
+            id_cash_sell = ModelCashSell.add(date_time=self.date_time, id_cash=self.id_cash, amount_sell=self.amount,
+                                             id_task=self._id_task)
+            ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=datetime.now(),
+                               id_cash_sell=id_cash_sell, fee=self.fee, comment=self.comment)
+            ModelTask.set_completed_status(self._id_task)
+            logging.info(f'Задание {CommandsWork.COMMAND_OUTPUT} выполнено')
+        except Exception as err:
+            logging.error(f'Задание {CommandsWork.COMMAND_OUTPUT} НЕ выполнено')
+            self._task_delete(id_task_delete=self._id_task)
+            raise ExceptionTaskList(f'Ошибка {CommandsWork.COMMAND_OUTPUT}: {err}')
+
+    def _run_command_bank_convertation(self):
+        try:
+            desc = f"Конвертировать date_time:{self.date_time},  купить coin:{self.coin}, " \
+                   f"amount:{self.amount}, продать id_cash:{self.id_cash}, fee:{self.fee}, comment:{self.comment}"
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
                                              status=TaskStatus.RUN)
             id_cash_sell = ModelCashSell.add(date_time=self.date_time, id_cash=self.id_cash, amount_sell=self.amount,
