@@ -72,7 +72,7 @@ class ScriptBankOutput:
         Команда сформировать id_safe_user
         """
         if not self._choice_cash:
-            self._choice_cash = ChoiceCash(self._connect_telebot, self._choice_safe.result.id_safe)
+            self._choice_cash = ChoiceCash(self._connect_telebot, self._choice_safe.result.id_safe, 'Выберите счет вывода:')
         working: bool = self._choice_cash.work()
         if working:
             self._next_function.set(self._work_choice_cash)  # еще не выбрано, повторить

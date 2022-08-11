@@ -71,7 +71,8 @@ class ScriptBankInput:
         Команда сформировать coin
         """
         if not self._choice_coin:
-            self._choice_coin = ChoiceCoin(self._connect_telebot, self._choice_safe.result.id_safe)
+            self._choice_coin = ChoiceCoin(self._connect_telebot, self._choice_safe.result.id_safe,
+                                           'Выберите монету/валюту:')
         working: bool = self._choice_coin.work()
         if working:
             self._next_function.set(self._work_choice_coin)
