@@ -4,3 +4,4 @@ class CommandsWork:
     COMMAND_HELP = '/help'
     COMMAND_INPUT = '/bank_input'
     COMMAND_OUTPUT = '/bank_output'
+    COMMAND_CONVERTATION = '/bank_convertation'

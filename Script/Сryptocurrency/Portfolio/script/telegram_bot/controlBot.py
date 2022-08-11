@@ -37,8 +37,12 @@ class ControlBot:
         elif self._connect_telebot.message == CommandsWork.COMMAND_OUTPUT:
             self._command_now = CommandsWork.COMMAND_OUTPUT
             self._operation_bank = OperationBank(self._connect_telebot, self._command_now)
+        elif self._connect_telebot.message == CommandsWork.COMMAND_CONVERTATION:
+            self._command_now = CommandsWork.COMMAND_CONVERTATION
+            self._operation_bank = OperationBank(self._connect_telebot, self._command_now)
 
-        if self._command_now == CommandsWork.COMMAND_INPUT or self._command_now == CommandsWork.COMMAND_OUTPUT:
+        if self._command_now == CommandsWork.COMMAND_INPUT or self._command_now == CommandsWork.COMMAND_OUTPUT\
+                or self._command_now == CommandsWork.COMMAND_CONVERTATION:
             try:
                 self._operation_bank.work()
             except Exception as err:
