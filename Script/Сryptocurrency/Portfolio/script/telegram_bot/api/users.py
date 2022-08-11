@@ -55,5 +55,5 @@ class Users:
         """
         #bot_telegram.delete_message(call.from_user.id, call.message.id)  # удалить все сообщение
         bot_telegram.edit_message_reply_markup(call.from_user.id, call.message.id)  # удалить клавиатуру
-        bot_telegram.send_message(call.from_user.id, message.text)  # отправить текст выбранной кнопки
+        bot_telegram.send_message(call.from_user.id, call.data)  # отправить текст выбранной кнопки
         Users.message_info(bot_telegram, call.from_user.id, call.data)
