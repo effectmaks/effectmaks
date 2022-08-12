@@ -16,6 +16,6 @@ logging.basicConfig(
 )
 
 if __name__ == '__main__':
-    cash = ModelCash.list_amount(4)
+    cash = ModelCash.get_cash_coin()
 
 

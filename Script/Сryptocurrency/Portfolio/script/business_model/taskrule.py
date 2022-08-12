@@ -41,6 +41,8 @@ class TaskRule:
             self._run_command_bank_input()
         elif self._command_type == CommandsWork.COMMAND_OUTPUT:
             self._run_command_bank_output()
+        elif self._command_type == CommandsWork.COMMAND_CONVERTATION:
+            self._run_command_bank_convertation()
 
     def _run_command_bank_input(self):
         try:
@@ -80,13 +82,16 @@ class TaskRule:
     def _run_command_bank_convertation(self):
         try:
             desc = f"Конвертировать date_time:{self.date_time},  купить coin:{self.coin}, " \
-                   f"amount:{self.amount}, продать id_cash:{self.id_cash}, fee:{self.fee}, comment:{self.comment}"
+                   f"amount:{self.amount}, продать id_cash:{self.id_cash}, amount_sell:{self.amount_sell}, " \
+                   f"comment:{self.comment}"
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
                                              status=TaskStatus.RUN)
-            id_cash_sell = ModelCashSell.add(date_time=self.date_time, id_cash=self.id_cash, amount_sell=self.amount,
-                                             id_task=self._id_task)
+            id_cash_sell = ModelCashSell.add(date_time=self.date_time, id_cash=self.id_cash, amount_sell=self.amount_sell,
+                                             id_task=self._id_task, price_sell=self.price_avr)
+            id_cash_buy = ModelCash.add(id_safe_user=self.id_safe_user, date_time=self.date_time, coin=self.coin,
+                                        amount_buy=self.amount, id_task=self._id_task, price_buy=self.price_avr)
             ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=datetime.now(),
-                               id_cash_sell=id_cash_sell, fee=self.fee, comment=self.comment)
+                               id_cash_buy=id_cash_buy, id_cash_sell=id_cash_sell, fee=self.fee, comment=self.comment)
             ModelTask.set_completed_status(self._id_task)
             logging.info(f'Задание {CommandsWork.COMMAND_OUTPUT} выполнено')
         except Exception as err:

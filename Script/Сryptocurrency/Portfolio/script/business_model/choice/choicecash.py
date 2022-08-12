@@ -26,7 +26,7 @@ class ExceptionChoiceCash(Exception):
 
 
 class ChoiceCash:
-    def __init__(self, connect_telebot: ConnectTelebot, id_safe_user: int, message: str):
+    def __init__(self, connect_telebot: ConnectTelebot, id_safe_user: int, message: str, filter_coin: str = ''):
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(ChoiceCash.__name__)
         self._next_function.set(self._question_choice_cash)  # первое что выполнит скрипт
@@ -36,13 +36,14 @@ class ChoiceCash:
 
         self._result = ChoiceCashResult()  # хранит результат выбора пользователя
         self._id_safe_user = id_safe_user
+        self._filter_coin = filter_coin
 
     def _question_choice_cash(self):
         """
         Режим показать счета у сейфа
         """
         logging.info('Режим показать счета у сейфа')
-        self._dict_cash: Dict = ModelCash.dict_amount(self._id_safe_user)
+        self._dict_cash: Dict = ModelCash.dict_amount(self._id_safe_user, self._filter_coin)
         self._dict_view: Dict = {f'{item.coin}: {item.amount}': id for id, item in self._dict_cash.items()}
         self._connect_telebot.view_keyboard(self._message_str, dict_view=self._dict_view)
         self._next_function.set(self._answer_choice_cash)

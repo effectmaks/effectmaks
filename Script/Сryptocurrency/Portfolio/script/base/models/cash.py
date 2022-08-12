@@ -125,13 +125,17 @@ class ModelCash:
             raise ExceptionDelete(cls.__name_model, str(err))
 
     @classmethod
-    def dict_amount(cls, id_safe_user: int) -> Dict:
+    def dict_amount(cls, id_safe_user: int, filter_coin: str = '') -> Dict:
         """
         Запрос объема все счетов у сейфа
+        :param filter_coin:
         :param id_safe_user: ID сейфа юзера
         :return: Словарь со счетами их названиями объемом и ID
         """
         logging.info('Запрос объема все счетов у сейфа.')
+        filter_sql = ''
+        if filter_coin != '':
+            filter_sql = f'and not cash.coin = "{filter_coin}"'
         try:
             dict_out = {}
             connect = ConnectSqlite.get_connect()
@@ -139,7 +143,8 @@ class ModelCash:
                                             'sum_cash_sell.amount IS NULL THEN 0 else sum_cash_sell.amount end) '
                                             'as amount from cash left join (select id_cash, sum(amount_sell) as '
                                             'amount from cashsell group by id_cash) as sum_cash_sell on cash.id = '
-                                            'sum_cash_sell.id_cash where cash.id_safe_user = {}'.format(id_safe_user))
+                                            'sum_cash_sell.id_cash where cash.id_safe_user = {} {}'.
+                                            format(id_safe_user, filter_sql))
             for cash in cash_list:
                 dict_out[cash[0]] = CashItem(coin=cash[1], amount=cash[2])
             logging.info('Запрос выполнен')

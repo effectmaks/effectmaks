@@ -19,6 +19,7 @@ class ChoiceFloat:
         self._next_function = NextFunction(ChoiceFloat.__name__)
         self._next_function.set(self._input_float_question)  # первое что выполнит скрипт
         self._result_float: float = 0
+        self._zero = False
         self._question_yes_no: QuestionYesNo
 
     def _input_float_question(self):
@@ -36,8 +37,10 @@ class ChoiceFloat:
         """
         logging.info(f'Режим проверки ответа на - {self._question_main}')
         message: str = self._connect_telebot.message
-        result_float = self._isfloat(message) or message == '0'
-        if result_float:
+        result_float = self._isfloat(message)
+        if message == '0':
+            self._zero = True
+        if result_float or self._zero:
             if self._check_min_max(result_float):
                 self._result_float = result_float
                 logging.info(f'Выбрано число - {self._result_float}')
@@ -55,7 +58,7 @@ class ChoiceFloat:
     def _check_min_max(self, result: float) -> bool:
         if not self._max_number:
             return True
-        if 0 < result <= self._max_number:
+        if 0 <= result <= self._max_number:
             return True
 
     def _wait_answer_repeat(self):
@@ -82,5 +85,7 @@ class ChoiceFloat:
 
     def work(self) -> bool:
         self._next_function.work()
+        if self._zero:
+            return False
         if not self._result_float:
             return True
