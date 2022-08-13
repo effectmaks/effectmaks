@@ -22,7 +22,7 @@ class ScriptBankOutput:
     Операции ввода, вывода и конвертации средств
     """
     def __init__(self, connect_telebot: ConnectTelebot):
-        logging.info('Создание объекта OperationBank')
+        logging.info('Создание объекта ScriptBankOutput')
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(ScriptBankOutput.__name__)
         self._next_function.set(self._work_choice_date)
@@ -59,7 +59,7 @@ class ScriptBankOutput:
         Команда сформировать id_safe_user
         """
         if not self._choice_safe:
-            self._choice_safe = ChoiceSafe(self._connect_telebot, ModesChoiceSafe.VIEW)
+            self._choice_safe = ChoiceSafe(self._connect_telebot, ModesChoiceSafe.VIEW, 'Выберите тип сейфа:')
         working: bool = self._choice_safe.work()
         if working:
             self._next_function.set(self._work_choice_safe)  # еще не выбрано, повторить
@@ -92,7 +92,7 @@ class ScriptBankOutput:
         if working:
             self._next_function.set(self._work_choice_amount_first)  # еще не выбрано, повторить
         else:
-            logging.info('Выбран _choice_amount_first')
+            logging.info('Выбран _choice_amount_sell')
             self._work_choice_amount_second()  # далее выполнить
 
     def _work_choice_amount_second(self):
@@ -107,7 +107,7 @@ class ScriptBankOutput:
         if working:
             self._next_function.set(self._work_choice_amount_second)  # еще не выбрано, повторить
         else:
-            logging.info('Выбран _choice_amount_second')
+            logging.info('Выбран _choice_amount_buy')
             self._calc_fee()  # далее выполнить
 
     def _calc_fee(self):

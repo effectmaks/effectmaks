@@ -22,7 +22,7 @@ class ScriptBankInput:
     Операции ввода, вывода и конвертации средств
     """
     def __init__(self, connect_telebot: ConnectTelebot):
-        logging.info('Создание объекта OperationBank')
+        logging.info('Создание объекта ScriptBankInput')
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(ScriptBankInput.__name__)
         self._next_function.set(self._work_choice_date)
@@ -58,7 +58,7 @@ class ScriptBankInput:
         Команда сформировать id_safe_user
         """
         if not self._choice_safe:
-            self._choice_safe = ChoiceSafe(self._connect_telebot, ModesChoiceSafe.CREATE)
+            self._choice_safe = ChoiceSafe(self._connect_telebot, ModesChoiceSafe.CREATE, 'Выберите тип сейфа:')
         working: bool = self._choice_safe.work()
         if working:
             self._next_function.set(self._work_choice_safe)  # еще не выбрано, повторить
