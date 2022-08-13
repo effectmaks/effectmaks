@@ -31,13 +31,14 @@ class ChoiceSafeResult:
 
 
 class ChoiceSafe:
-    def __init__(self, connect_telebot: ConnectTelebot, mode_now: str):
+    def __init__(self, connect_telebot: ConnectTelebot, mode_now: str, message: str):
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(ChoiceSafe.__name__)
         self._next_function.set(self._input_safe_type)  # первое что выполнит скрипт
         self._result = ChoiceSafeResult() # класс хранит результат выбора пользователя
         self._MODE_ADD = 'ДОБАВИТЬ'
         self._mode_now = mode_now
+        self._message = message
 
     def _input_safe_type(self):
         """
@@ -45,7 +46,7 @@ class ChoiceSafe:
         """
         logging.info(f'Режим задать вопрос, какой тип сейфа?')
         list_name: list = Safetypes.get_list()
-        self._connect_telebot.view_keyboard('Выберите тип сейфа:', list_view=list_name)
+        self._connect_telebot.view_keyboard(self._message, list_view=list_name)
         self._next_function.set(self._input_safe_type_check)
         self._question_yes_no: QuestionYesNo
 
