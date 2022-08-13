@@ -40,9 +40,13 @@ class ControlBot:
         elif self._connect_telebot.message == CommandsWork.COMMAND_CONVERTATION:
             self._command_now = CommandsWork.COMMAND_CONVERTATION
             self._operation_bank = OperationBank(self._connect_telebot, self._command_now)
+        elif self._connect_telebot.message == CommandsWork.COMMAND_COIN_TRANSFER:
+            self._command_now = CommandsWork.COMMAND_COIN_TRANSFER
+            self._operation_bank = OperationBank(self._connect_telebot, self._command_now)
 
         if self._command_now == CommandsWork.COMMAND_INPUT or self._command_now == CommandsWork.COMMAND_OUTPUT\
-                or self._command_now == CommandsWork.COMMAND_CONVERTATION:
+                or self._command_now == CommandsWork.COMMAND_CONVERTATION \
+                or self._command_now == CommandsWork.COMMAND_COIN_TRANSFER:
             try:
                 self._operation_bank.work()
             except Exception as err:
@@ -83,5 +87,7 @@ class ControlBot:
         logging.info(f'Режим: Помощь')
         text_send = f'{self.__NAME_BOT} выполняет команды: \n' \
                     f'{CommandsWork.COMMAND_INPUT} - пополнить счет \n' \
-                    f'{CommandsWork.COMMAND_OUTPUT} - снять со счета'
+                    f'{CommandsWork.COMMAND_OUTPUT} - снять со счета \n' \
+                    f'{CommandsWork.COMMAND_CONVERTATION} - конвертация валют \n' \
+                    f'{CommandsWork.COMMAND_COIN_TRANSFER} - перевод между сейфами'
         self._connect_telebot.send_text(text_send)
