@@ -106,7 +106,8 @@ class ScriptCoinTransfer:
         """
         if not self._choice_amount_sell:
             self._choice_amount_sell = ChoiceFloat(self._connect_telebot,
-                                                   question_main='Введите сколько было выведено:',
+                                                   question_main=f'Введите сколько было выведено '
+                                                                 f'{self._choice_cash_sell.result.coin}:',
                                                    max_number=self._choice_cash_sell.result.max_number)
         working: bool = self._choice_amount_sell.work()
         if working:
@@ -162,6 +163,7 @@ class ScriptCoinTransfer:
         task_rule.coin = self._choice_cash_sell.result.coin
         task_rule.id_cash = self._choice_cash_sell.result.id_cash
         task_rule.price_avr = self._choice_cash_sell.result.price_buy
+        task_rule.coin_avr = self._choice_cash_sell.result.coin_avr
         task_rule.amount_sell = self._choice_amount_sell.result
         task_rule.amount = self._choice_amount_buy.result
         task_rule.fee = self._fee
