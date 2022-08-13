@@ -1,5 +1,6 @@
 import logging
 
+from business_model.choice.choicePriceAvr import ChoicePriceAvr
 from business_model.choice.choicecash import ChoiceCash
 from business_model.choice.choicecoin import ChoiceCoin
 from business_model.choice.choicedate import ChoiceDate
@@ -39,6 +40,7 @@ class ScriptBankConvertation:
         self._choice_cash_sell: ChoiceCash = None
         self._choice_amount_sell_before: ChoiceFloat = None
         self._choice_amount_sell_after: ChoiceFloat = None
+        self._choice_price_avr: ChoicePriceAvr = None
         self._amount_sell: float
         self._price_avr: float
         self._choice_comment: ChoiceText = None
@@ -131,7 +133,7 @@ class ScriptBankConvertation:
                                                                          f"- не может быть отрицательным.")
             self._wait_calc_amount_buy_repeat()
             return
-        self._connect_telebot.send_text(f'Куплен объем {self._choice_coin_buy.result}: {self._amount_buy}')
+        self._connect_telebot.send_text(f'Объем покупки: {self._choice_coin_buy.result}: {self._amount_buy}')
         self._work_choice_cash()  # далее выполнить
 
     def _wait_calc_amount_buy_repeat(self):
@@ -206,8 +208,8 @@ class ScriptBankConvertation:
                                                                          f"- не может быть отрицательным.")
             self._wait_calc_amount_sell_repeat()
             return
-        self._connect_telebot.send_text(f'Продан объем {self._choice_cash_sell.result.coin}: {self._amount_sell}')
-        self._calc_price_avr()  # далее выполнить
+        self._connect_telebot.send_text(f'Объем продажи {self._choice_cash_sell.result.coin}: {self._amount_sell}')
+        self._work_price_avr()  # далее выполнить
 
     def _wait_calc_amount_sell_repeat(self):
         b_working = self._question_yes_no.work()
@@ -222,16 +224,24 @@ class ScriptBankConvertation:
         else:
             raise ExceptionScriptBankConvertation(f'Юзер вводит неправильные числа.')
 
-    def _calc_price_avr(self):
+    def _work_price_avr(self):
         """
-        Вычисление price_avr
+        Команда Вычисление price_avr
         """
         logging.info('Вычисление price_avr')
-        self._price_avr = self._amount_sell / self._amount_buy
-        self._connect_telebot.send_text(f'Цена покупки {self._choice_coin_buy.result}/'
-                                        f'{self._choice_cash_sell.result.coin}: '
-                                        f'{self._price_avr}')
-        self._work_choice_comment()  # далее выполнить
+        if not self._choice_price_avr:
+            self._choice_price_avr = ChoicePriceAvr(self._connect_telebot, amount_sell=self._amount_sell,
+                                                    amount_buy=self._amount_buy)
+        working: bool = self._choice_price_avr.work()
+        if working:
+            self._next_function.set(self._work_price_avr)  # еще не выбрано, повторить
+        else:
+            logging.info('Выбран price_avr')
+            self._connect_telebot.send_text(f'Цена {self._choice_price_avr.result.type_convertation.name} '
+                                            f'{self._choice_coin_buy.result}/'
+                                            f'{self._choice_cash_sell.result.coin}: '
+                                            f'{self._choice_price_avr.result.price_avr}')
+            self._work_choice_comment()  # далее выполнить
 
     def _work_choice_comment(self):
         """
@@ -255,10 +265,12 @@ class ScriptBankConvertation:
         task_rule.coin = self._choice_coin_buy.result
         task_rule.amount = self._amount_buy
 
-        task_rule.id_cash_ = self._choice_cash_sell.result.id_cash  # Откуда снимать
+        task_rule.id_cash = self._choice_cash_sell.result.id_cash  # Откуда снимать
         task_rule.amount_sell = self._amount_sell
         task_rule.id_safe_user = self._choice_safe.result.id_safe
-        task_rule.price_avr = self._price_avr
+        task_rule.price_avr = self._choice_price_avr.result.price_avr
+        task_rule.type_convertation = self._choice_price_avr.result.type_convertation
+        task_rule.coin_avr = self._choice_cash_sell.result.coin
         task_rule.comment = self._choice_comment.result
         task_rule.run()
         self._connect_telebot.send_text('Команда выполнена.')
