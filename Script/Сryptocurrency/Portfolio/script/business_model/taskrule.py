@@ -43,6 +43,8 @@ class TaskRule:
             self._run_command_bank_output()
         elif self._command_type == CommandsWork.COMMAND_CONVERTATION:
             self._run_command_bank_convertation()
+        elif self._command_type == CommandsWork.COMMAND_COIN_TRANSFER:
+            self._run_command_bank_coin_transfer()
 
     def _run_command_bank_input(self):
         try:
@@ -93,11 +95,31 @@ class TaskRule:
             ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=datetime.now(),
                                id_cash_buy=id_cash_buy, id_cash_sell=id_cash_sell, fee=self.fee, comment=self.comment)
             ModelTask.set_completed_status(self._id_task)
-            logging.info(f'Задание {CommandsWork.COMMAND_OUTPUT} выполнено')
+            logging.info(f'Задание {CommandsWork.COMMAND_CONVERTATION} выполнено')
         except Exception as err:
-            logging.error(f'Задание {CommandsWork.COMMAND_OUTPUT} НЕ выполнено')
+            logging.error(f'Задание {CommandsWork.COMMAND_CONVERTATION} НЕ выполнено')
             self._task_delete(id_task_delete=self._id_task)
-            raise ExceptionTaskList(f'Ошибка {CommandsWork.COMMAND_OUTPUT}: {err}')
+            raise ExceptionTaskList(f'Ошибка {CommandsWork.COMMAND_CONVERTATION}: {err}')
+
+    def _run_command_bank_coin_transfer(self):
+        try:
+            desc = f"Перевести date_time:{self.date_time},  id_cash:{self.id_cash}, " \
+                   f"id_safe_user:{self.id_safe_user}, снять amount_sell:{self.amount_sell}, " \
+                   f"пополнить amount:{self.amount}, fee:{self.fee}, comment:{self.comment}"
+            self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
+                                             status=TaskStatus.RUN)
+            id_cash_sell = ModelCashSell.add(date_time=self.date_time, id_cash=self.id_cash, amount_sell=self.amount_sell,
+                                             id_task=self._id_task, price_sell=0)
+            id_cash_buy = ModelCash.add(id_safe_user=self.id_safe_user, date_time=self.date_time, coin=self.coin,
+                                        amount_buy=self.amount, id_task=self._id_task, price_buy=self.price_avr)
+            ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=datetime.now(),
+                               id_cash_buy=id_cash_buy, id_cash_sell=id_cash_sell, fee=self.fee, comment=self.comment)
+            ModelTask.set_completed_status(self._id_task)
+            logging.info(f'Задание {CommandsWork.COMMAND_COIN_TRANSFER} выполнено')
+        except Exception as err:
+            logging.error(f'Задание {CommandsWork.COMMAND_COIN_TRANSFER} НЕ выполнено')
+            self._task_delete(id_task_delete=self._id_task)
+            raise ExceptionTaskList(f'Ошибка {CommandsWork.COMMAND_COIN_TRANSFER}: {err}')
 
     @classmethod
     def check_delete(cls, id_user: int = 0):
