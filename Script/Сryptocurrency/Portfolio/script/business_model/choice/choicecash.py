@@ -1,7 +1,7 @@
 import logging
 from typing import Dict
 
-from base.models.cash import ModelCash
+from base.models.cash import ModelCash, CashItem
 from business_model.nextfunction import NextFunction
 from business_model.questionYesNo import QuestionYesNo
 from telegram_bot.api.telegramApi import ConnectTelebot
@@ -12,9 +12,10 @@ class ChoiceCashResult:
         self.max_number: float = 0
         self.id_cash: int = 0
         self.coin: str = ""
+        self.price_buy: float = 0
 
     def __bool__(self) -> bool:
-        if self.id_cash != 0 and self.max_number != 0:
+        if self.id_cash != 0 and self.coin != "":
             return True
         return False
 
@@ -43,7 +44,7 @@ class ChoiceCash:
         Режим показать счета у сейфа
         """
         logging.info('Режим показать счета у сейфа')
-        self._dict_cash: Dict = ModelCash.dict_amount(self._id_safe_user, self._filter_coin)
+        self._dict_cash: Dict[str, CashItem] = ModelCash.dict_amount(self._id_safe_user, self._filter_coin)
         self._dict_view: Dict = {f'{item.coin}: {item.amount}': id for id, item in self._dict_cash.items()}
         self._connect_telebot.view_keyboard(self._message_str, dict_view=self._dict_view)
         self._next_function.set(self._answer_choice_cash)
@@ -61,6 +62,7 @@ class ChoiceCash:
                 self._result.id_cash = id_cash
                 self._result.max_number = self._dict_cash.get(id_cash).amount
                 self._result.coin = self._dict_cash.get(id_cash).coin
+                self._result.price_buy = self._dict_cash.get(id_cash).price_buy
             else:
                 self._err_answer_choice_cash()
         except Exception as err:

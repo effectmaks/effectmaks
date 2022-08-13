@@ -6,9 +6,10 @@ from datetime import datetime
 
 
 class CashItem:
-    def __init__(self, coin: str, amount: float):
+    def __init__(self, coin: str, amount: float, price_buy: float):
         self.coin = coin
         self.amount = amount
+        self.price_buy = price_buy
 
 
 class Cash(Model):
@@ -139,14 +140,18 @@ class ModelCash:
         try:
             dict_out = {}
             connect = ConnectSqlite.get_connect()
-            cash_list = connect.execute_sql('select cash.id, cash.coin, (cash.amount_buy - CASE WHEN '
-                                            'sum_cash_sell.amount IS NULL THEN 0 else sum_cash_sell.amount end) '
-                                            'as amount from cash left join (select id_cash, sum(amount_sell) as '
-                                            'amount from cashsell group by id_cash) as sum_cash_sell on cash.id = '
-                                            'sum_cash_sell.id_cash where cash.id_safe_user = {} {}'.
+            cash_list = connect.execute_sql('select id, coin, amount, price_buy '
+                                            'from (select cash.id, cash.coin, (cash.amount_buy - '
+                                            'CASE WHEN sum_cash_sell.amount IS NULL '
+                                            'THEN 0 else sum_cash_sell.amount end) as amount, cash.price_buy '
+                                            'from cash '
+                                            'left join (select id_cash, sum(amount_sell) as amount '
+                                            'from cashsell group by id_cash) as sum_cash_sell '
+                                            'on cash.id = sum_cash_sell.id_cash '
+                                            'where cash.id_safe_user = {} {}) as filter_zero where amount <> 0'.
                                             format(id_safe_user, filter_sql))
             for cash in cash_list:
-                dict_out[cash[0]] = CashItem(coin=cash[1], amount=cash[2])
+                dict_out[cash[0]] = CashItem(coin=cash[1], amount=cash[2], price_buy=cash[3])
             logging.info('Запрос выполнен')
             return dict_out
         except Exception as err:
