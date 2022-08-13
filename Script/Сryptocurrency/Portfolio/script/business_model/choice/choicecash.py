@@ -13,6 +13,7 @@ class ChoiceCashResult:
         self.id_cash: int = 0
         self.coin: str = ""
         self.price_buy: float = 0
+        self.coin_avr: str = ""
 
     def __bool__(self) -> bool:
         if self.id_cash != 0 and self.coin != "":
@@ -45,9 +46,19 @@ class ChoiceCash:
         """
         logging.info('Режим показать счета у сейфа')
         self._dict_cash: Dict[str, CashItem] = ModelCash.dict_amount(self._id_safe_user, self._filter_coin)
-        self._dict_view: Dict = {f'{item.coin}: {item.amount}': id for id, item in self._dict_cash.items()}
+        if not self._dict_cash:
+            self._connect_telebot.send_text('В сейфе нет счетов для продажи.')
+            raise ExceptionChoiceCash('В сейфе нет счетов для продажи.')
+        self._dict_view: Dict = {self._key_value(item): id for id, item in
+                                 self._dict_cash.items()}
         self._connect_telebot.view_keyboard(self._message_str, dict_view=self._dict_view)
         self._next_function.set(self._answer_choice_cash)
+
+    def _key_value(self, item: CashItem) -> str:
+        price_avr: str = f'({item.coin_avr} {item.price_buy})'
+        if price_avr == "(None 0.0)":
+            price_avr = '(-)'
+        return f'{item.coin}: {item.amount} {price_avr}'
 
     def _answer_choice_cash(self):
         """
@@ -63,6 +74,7 @@ class ChoiceCash:
                 self._result.max_number = self._dict_cash.get(id_cash).amount
                 self._result.coin = self._dict_cash.get(id_cash).coin
                 self._result.price_buy = self._dict_cash.get(id_cash).price_buy
+                self._result.coin_avr = self._dict_cash.get(id_cash).coin_avr
             else:
                 self._err_answer_choice_cash()
         except Exception as err:

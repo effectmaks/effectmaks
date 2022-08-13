@@ -6,10 +6,11 @@ from datetime import datetime
 
 
 class CashItem:
-    def __init__(self, coin: str, amount: float, price_buy: float):
+    def __init__(self, coin: str, amount: float, price_buy: float, coin_avr: str):
         self.coin = coin
         self.amount = amount
         self.price_buy = price_buy
+        self.coin_avr = coin_avr
 
 
 class Cash(Model):
@@ -23,6 +24,7 @@ class Cash(Model):
     amount_buy = DoubleField(default=0)
     price_buy = DoubleField(default=0)
     id_task = IntegerField()
+    coin_avr = TextField()
 
     class Meta:
         table_name = 'cash'
@@ -34,10 +36,11 @@ class ModelCash:
 
     @classmethod
     def add(cls, id_safe_user: int = 0, date_time: datetime = None, coin: str = "", amount_buy: float = 0,
-            price_buy: float = 0, id_task: int = 0) -> int:
+            price_buy: float = 0, id_task: int = 0, coin_avr: str = "") -> int:
         """
         Добавление счета покупки/конвертирование монеты(средства).
         Исключения: конвертации даты, добавления записи.
+        :param coin_avr:
         :rtype: object
         :param id_safe_user: ID сейфа
         :param date_time: Дата и время добавления
@@ -55,6 +58,7 @@ class ModelCash:
                                   coin=coin,
                                   amount_buy=amount_buy,
                                   price_buy=price_buy,
+                                  coin_avr=coin_avr,
                                   id_task=id_task)
             logging.info(f'Новый счет ID:{id_cash}')
             return id_cash
@@ -140,10 +144,11 @@ class ModelCash:
         try:
             dict_out = {}
             connect = ConnectSqlite.get_connect()
-            cash_list = connect.execute_sql('select id, coin, amount, price_buy '
+            cash_list = connect.execute_sql('select id, coin, amount, price_buy, coin_avr '
                                             'from (select cash.id, cash.coin, (cash.amount_buy - '
                                             'CASE WHEN sum_cash_sell.amount IS NULL '
-                                            'THEN 0 else sum_cash_sell.amount end) as amount, cash.price_buy '
+                                            'THEN 0 else sum_cash_sell.amount end) as amount, '
+                                            'cash.price_buy, cash.coin_avr '
                                             'from cash '
                                             'left join (select id_cash, sum(amount_sell) as amount '
                                             'from cashsell group by id_cash) as sum_cash_sell '
@@ -151,7 +156,7 @@ class ModelCash:
                                             'where cash.id_safe_user = {} {}) as filter_zero where amount <> 0'.
                                             format(id_safe_user, filter_sql))
             for cash in cash_list:
-                dict_out[cash[0]] = CashItem(coin=cash[1], amount=cash[2], price_buy=cash[3])
+                dict_out[cash[0]] = CashItem(coin=cash[1], amount=cash[2], price_buy=cash[3], coin_avr=cash[4])
             logging.info('Запрос выполнен')
             return dict_out
         except Exception as err:
