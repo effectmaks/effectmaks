@@ -82,7 +82,11 @@ class ChoiceSafe:
         logging.info(f'Режим показать сейфы с типом "{self._result.safe_type}"')
         safes_dict = ModelSafeuser.get_dict(self._connect_telebot.id_user, type_name=self._result.safe_type)
         if not safes_dict:
-            safes_dict = {}
+            if self._mode_now == ModesChoiceSafe.VIEW:
+                self._connect_telebot.send_text(f'У вас нет сейфов типа "{self._result.safe_type}".')
+                raise ExceptionChoiceSafe(f'Нет сейфов "{self._result.safe_type}" чтобы отобразить список юзеру.')
+            else:
+                safes_dict = {}
         if self._mode_now == ModesChoiceSafe.CREATE:
             safes_dict[self._MODE_ADD] = self._MODE_ADD
         self._dict_safes_user = safes_dict
