@@ -3,6 +3,7 @@ import logging
 from business_model.modes.scriptBankConvertation import ScriptBankConvertation
 from business_model.modes.scriptBankInput import ScriptBankInput
 from business_model.modes.scriptBankOutput import ScriptBankOutput
+from business_model.modes.scriptCashView import ScriptCashView
 from business_model.modes.scriptCoinTransfer import ScriptCoinTransfer
 from telegram_bot.api.commandsWork import CommandsWork
 from telegram_bot.api.telegramApi import ConnectTelebot
@@ -26,6 +27,7 @@ class OperationBank:
         self._script_bank_output = ScriptBankOutput(self._connect_telebot)
         self._script_bank_convertation = ScriptBankConvertation(self._connect_telebot)
         self._script_coin_transfer = ScriptCoinTransfer(self._connect_telebot)
+        self._script_cash_view = ScriptCashView(self._connect_telebot)
 
     def work(self):
         """
@@ -41,3 +43,5 @@ class OperationBank:
             self._script_bank_convertation.work()
         elif self._command_now == CommandsWork.COMMAND_COIN_TRANSFER:
             self._script_coin_transfer.work()
+        elif self._command_now == CommandsWork.COMMAND_CASH_VIEW:
+            self._script_cash_view.work()

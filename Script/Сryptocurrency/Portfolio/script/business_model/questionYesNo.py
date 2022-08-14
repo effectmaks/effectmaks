@@ -18,7 +18,7 @@ class QuestionYesNo:
         """
         Сформировать вопрос
         """
-        self._connect_telebot.view_keyboard_yes_no(f'{self._text_err}\n Желаете повторить?',
+        self._connect_telebot.view_keyboard_yes_no(f'{self._text_err}\nЖелаете повторить?',
                                                    self._YES, self._NO)
         self._next_function.set(self._answer)
 

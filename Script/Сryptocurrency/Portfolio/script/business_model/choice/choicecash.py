@@ -4,7 +4,7 @@ from typing import Dict
 from base.models.cash import ModelCash, CashItem
 from business_model.nextfunction import NextFunction
 from business_model.questionYesNo import QuestionYesNo
-from telegram_bot.api.telegramApi import ConnectTelebot
+from telegram_bot.api.telegramApi import ConnectTelebot, MessageType
 
 
 class ChoiceCashResult:
@@ -28,35 +28,37 @@ class ExceptionChoiceCash(Exception):
 
 
 class ChoiceCash:
-    def __init__(self, connect_telebot: ConnectTelebot, id_safe_user: int, message: str, filter_coin: str = ''):
+    def __init__(self, connect_telebot: ConnectTelebot, id_safe_user: int, message: str,
+                 filter_coin_delete: str = '', filter_coin_view: str = ''):
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(ChoiceCash.__name__)
         self._next_function.set(self._question_choice_cash)  # первое что выполнит скрипт
         self._message_str: str = message
-        self._dict_view: Dict
         self._dict_cash: Dict
 
         self._result = ChoiceCashResult()  # хранит результат выбора пользователя
         self._id_safe_user = id_safe_user
-        self._filter_coin = filter_coin
+        self._filter_coin_delete = filter_coin_delete
+        self._filter_coin_view = filter_coin_view
 
     def _question_choice_cash(self):
         """
         Режим показать счета у сейфа
         """
         logging.info('Режим показать счета у сейфа')
-        self._dict_cash: Dict[str, CashItem] = ModelCash.dict_amount(self._id_safe_user, self._filter_coin)
+        self._dict_cash: Dict[int, CashItem] = ModelCash.dict_amount(self._id_safe_user, self._filter_coin_delete,
+                                                                     self._filter_coin_view)
         if not self._dict_cash:
             self._connect_telebot.send_text('В сейфе нет счетов для продажи.')
             raise ExceptionChoiceCash('В сейфе нет счетов для продажи.')
-        self._dict_view: Dict = {self._key_value(item): id for id, item in
-                                 self._dict_cash.items()}
-        self._connect_telebot.view_keyboard(self._message_str, dict_view=self._dict_view)
+        dict_view: Dict = {id: self._key_value(item) for id, item in
+                           self._dict_cash.items()}
+        self._connect_telebot.view_keyboard(self._message_str, dict_view=dict_view, type_message=MessageType.KEY)
         self._next_function.set(self._answer_choice_cash)
 
     def _key_value(self, item: CashItem) -> str:
         price_avr: str = f'({item.coin_avr} {item.price_buy})'
-        if price_avr == "(None 0.0)":
+        if price_avr in ["(None 0.0)", "( 0.0)"]:
             price_avr = '(-)'
         return f'{item.coin}: {item.amount} {price_avr}'
 
@@ -66,15 +68,14 @@ class ChoiceCash:
         """
         logging.info("Проверка пользователя, какой счет он выбрал.")
         try:
-            choice_cash_info = self._connect_telebot.message
-            id_cash = self._dict_view.get(choice_cash_info)
-            if id_cash:
-                logging.info(f'Выбран id_cash: {id_cash}')
-                self._result.id_cash = id_cash
-                self._result.max_number = self._dict_cash.get(id_cash).amount
-                self._result.coin = self._dict_cash.get(id_cash).coin
-                self._result.price_buy = self._dict_cash.get(id_cash).price_buy
-                self._result.coin_avr = self._dict_cash.get(id_cash).coin_avr
+            cash_key = int(self._connect_telebot.message)
+            if cash_key in self._dict_cash.keys():
+                logging.info(f'Выбран id_cash: {cash_key}')
+                self._result.id_cash = cash_key
+                self._result.max_number = self._dict_cash.get(cash_key).amount
+                self._result.coin = self._dict_cash.get(cash_key).coin
+                self._result.price_buy = self._dict_cash.get(cash_key).price_buy
+                self._result.coin_avr = self._dict_cash.get(cash_key).coin_avr
             else:
                 self._err_answer_choice_cash()
         except Exception as err:

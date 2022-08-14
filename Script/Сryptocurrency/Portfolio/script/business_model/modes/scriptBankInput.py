@@ -1,6 +1,6 @@
 import logging
 
-from business_model.choice.choicecoin import ChoiceCoin
+from business_model.choice.choicecoin import ChoiceCoin, ModesChoiceCoin
 from business_model.choice.choicefloat import ChoiceFloat
 from business_model.choice.choicetext import ChoiceText
 from business_model.nextfunction import NextFunction
@@ -72,7 +72,7 @@ class ScriptBankInput:
         """
         if not self._choice_coin:
             self._choice_coin = ChoiceCoin(self._connect_telebot, self._choice_safe.result.id_safe,
-                                           'Выберите монету/валюту:')
+                                           'Выберите монету/валюту:', ModesChoiceCoin.ADD)
         working: bool = self._choice_coin.work()
         if working:
             self._next_function.set(self._work_choice_coin)

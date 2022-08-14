@@ -6,11 +6,14 @@ from datetime import datetime
 
 
 class CashItem:
-    def __init__(self, coin: str, amount: float, price_buy: float, coin_avr: str):
+    def __init__(self, coin: str, amount: float, price_buy: float = 0, coin_avr: str = "",
+                 safe_name: str = "", safe_type: str = ""):
         self.coin = coin
         self.amount = amount
         self.price_buy = price_buy
         self.coin_avr = coin_avr
+        self.safe_name = safe_name
+        self.safe_type = safe_type
 
 
 class Cash(Model):
@@ -66,27 +69,10 @@ class ModelCash:
             raise ExceptionInsert(cls.__name_model, str(err))
 
     @classmethod
-    def get_cash_coin(cls, id_safe_user: int) -> list:
-        """
-        Выгрузить все монеты счетов юзера у сейфа
-        """
-        list_out = []
-        try:
-            cashes_user = Cash.select(Cash.coin).distinct().where(Cash.id_safe_user == id_safe_user)
-            if cashes_user:
-                for cash in cashes_user:
-                    list_out.append(cash.coin)
-                return list_out
-            else:
-                logging.info(f'В таблице {cls.__name_model} у сейфа ID:{id_safe_user} не было никогда монет.')
-        except Exception as err:
-            raise ExceptionSelect(cls.__name_model, str(err))
-
-    @classmethod
     def delete_task_run(cls, id_task: int = 0):
         """
         Команда удалить все запущенные задания - Task.status == TaskStatus.RUN.
-        :param id_user:
+        :param id_task:
         """
         logging.info(f'Команда удалить все запущенные задания из {cls.__name_model}.')
         must_delete: bool = cls._view_delete_task(id_task)
@@ -99,7 +85,7 @@ class ModelCash:
     def _view_delete_task(cls, id_task: int = 0) -> bool:
         """
         Показать в логировании, что будем удалять - Task.status == TaskStatus.RUN
-        :param id_user: ID юзера
+        :param id_task: ID задания
         :return: True - есть что удалить.
         """
         must_delete: bool = False
@@ -130,17 +116,50 @@ class ModelCash:
             raise ExceptionDelete(cls.__name_model, str(err))
 
     @classmethod
-    def dict_amount(cls, id_safe_user: int, filter_coin: str = '') -> Dict:
+    def get_cash_coin(cls, id_safe_user: int) -> dict:
+        """
+        Выгрузить все счета в сейфе
+        """
+        try:
+            logging.info('Запрос Выгрузить все счета в сейфе.')
+            dict_out = {}
+            connect = ConnectSqlite.get_connect()
+            cash_list = connect.execute_sql('select coin, sum(amount) from (select cash.coin, '
+                                            '(cash.amount_buy - CASE WHEN sum_cash_sell.amount IS NULL '
+                                            'THEN 0 else sum_cash_sell.amount end) as amount '
+                                            'from cash left join (select id_cash, sum(amount_sell) as amount '
+                                            'from cashsell group by id_cash) as sum_cash_sell '
+                                            'on cash.id = sum_cash_sell.id_cash '
+                                            'where cash.id_safe_user = {}) as filter_zero '
+                                            'where amount <> 0 group by coin order by 1'.
+                                            format(id_safe_user))
+            if cash_list:
+                for cash in cash_list:
+                    dict_out[cash[0]] = f'{cash[0]}: {cash[1]}'
+                logging.info('Запрос выполнен')
+                return dict_out
+            else:
+                logging.info(f'В таблице {cls.__name_model} у сейфа ID:{id_safe_user} не было никогда монет.')
+        except Exception as err:
+            raise ExceptionSelect(cls.__name_model, str(err))
+
+    @classmethod
+    def dict_amount(cls, id_safe_user: int, filter_coin_del: str = '',
+                    filter_coin_view: str = '') -> Dict:
         """
         Запрос объема все счетов у сейфа
-        :param filter_coin:
+        :param filter_coin_view:
+        :param filter_coin_del:
         :param id_safe_user: ID сейфа юзера
         :return: Словарь со счетами их названиями объемом и ID
         """
         logging.info('Запрос объема все счетов у сейфа.')
-        filter_sql = ''
-        if filter_coin != '':
-            filter_sql = f'and not cash.coin = "{filter_coin}"'
+        sql_coin_del = ''
+        sql_coin_view = ''
+        if filter_coin_del != '':
+            sql_coin_del = f'and not cash.coin = "{filter_coin_del}"'
+        if filter_coin_view != '':
+            sql_coin_view = f'and cash.coin = "{filter_coin_view}"'
         try:
             dict_out = {}
             connect = ConnectSqlite.get_connect()
@@ -153,11 +172,45 @@ class ModelCash:
                                             'left join (select id_cash, sum(amount_sell) as amount '
                                             'from cashsell group by id_cash) as sum_cash_sell '
                                             'on cash.id = sum_cash_sell.id_cash '
-                                            'where cash.id_safe_user = {} {}) as filter_zero where amount <> 0'.
-                                            format(id_safe_user, filter_sql))
+                                            'where cash.id_safe_user = {} {} {}) '
+                                            'as filter_zero where amount <> 0 order by 2,4,3'.
+                                            format(id_safe_user, sql_coin_del, sql_coin_view))
             for cash in cash_list:
-                dict_out[cash[0]] = CashItem(coin=cash[1], amount=cash[2], price_buy=cash[3], coin_avr=cash[4])
+                dict_out[int(cash[0])] = CashItem(coin=cash[1], amount=cash[2], price_buy=cash[3], coin_avr=cash[4])
             logging.info('Запрос выполнен')
             return dict_out
+        except Exception as err:
+            raise ExceptionSelect(cls.__name_model, str(err))
+
+    @classmethod
+    def get_cash_user(cls, id_user: int) -> Dict[int, CashItem]:
+        """
+        Выгрузить все счета юзера
+        """
+        try:
+            logging.info('Запрос Выгрузить все счета юзера.')
+            dict_out: Dict[int, CashItem] = {}
+            connect = ConnectSqlite.get_connect()
+            cash_list = connect.execute_sql('select id, safe_name, safe_type, coin, sum(amount) as sum_amount '
+                                            'from (select cash.id, safelist.name '
+                                            'as safe_name, safelist.type as safe_type, cash.coin, (cash.amount_buy - '
+                                            'CASE WHEN sum_cash_sell.amount IS NULL THEN 0 '
+                                            'else sum_cash_sell.amount end) '
+                                            'as amount from cash join safeuser on cash.id_safe_user = safeuser.id '
+                                            'and safeuser.id_user = {} join safelist '
+                                            'on safelist.id = safeuser.id_safe '
+                                            'left join (select id_cash, sum(amount_sell) as amount '
+                                            'from cashsell group by id_cash) as sum_cash_sell '
+                                            'on cash.id = sum_cash_sell.id_cash) as filter_zero '
+                                            'where amount <> 0 group by safe_name, safe_type, coin order by 2,3,4 '.
+                                            format(id_user))
+            if cash_list:
+                for cash in cash_list:
+                    dict_out[int(cash[0])] = CashItem(safe_name=cash[1], safe_type=cash[2], coin=cash[3],
+                                                      amount=cash[4])
+                logging.info('Запрос выполнен.')
+                return dict_out
+            else:
+                logging.info(f'В таблице {cls.__name_model} у юзера ID:{id_user} нет счетов.')
         except Exception as err:
             raise ExceptionSelect(cls.__name_model, str(err))

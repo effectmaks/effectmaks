@@ -1,6 +1,7 @@
 import logging
 
 from business_model.choice.choicecash import ChoiceCash
+from business_model.choice.choicecoin import ChoiceCoin, ModesChoiceCoin
 from business_model.choice.choicefloat import ChoiceFloat
 from business_model.choice.choicetext import ChoiceText
 from business_model.nextfunction import NextFunction
@@ -27,6 +28,7 @@ class ScriptCoinTransfer:
         self._next_function = NextFunction(ScriptCoinTransfer.__name__)
         self._next_function.set(self._work_choice_date)
         self._check_date_time: ChoiceDate = None
+        self._choice_coin_sell: ChoiceCoin = None
         self._choice_safe_sell: ChoiceSafe = None
         self._choice_cash_sell: ChoiceCash = None
 
@@ -70,6 +72,20 @@ class ScriptCoinTransfer:
             self._next_function.set(self._work_choice_safe_sell)  # еще не выбрано, повторить
         else:
             logging.info('Выбран id_safe_sell')
+            self._work_choice_coin_sell()  # далее выполнить
+
+    def _work_choice_coin_sell(self):
+        """
+        Команда сформировать coin sell
+        """
+        if not self._choice_coin_sell:
+            self._choice_coin_sell = ChoiceCoin(self._connect_telebot, self._choice_safe_sell.result.id_safe,
+                                               'Выберите монету/валюту для перевода:', ModesChoiceCoin.VIEW)
+        working: bool = self._choice_coin_sell.work()
+        if working:
+            self._next_function.set(self._work_choice_coin_sell)
+        else:
+            logging.info('Выбран coin sell')
             self._work_choice_cash_sell()  # далее выполнить
 
     def _work_choice_cash_sell(self):
@@ -78,7 +94,8 @@ class ScriptCoinTransfer:
         """
         if not self._choice_cash_sell:
             self._choice_cash_sell = ChoiceCash(self._connect_telebot, self._choice_safe_sell.result.id_safe,
-                                           'Выберите счет снятия:')
+                                                'Выберите счет снятия:',
+                                                filter_coin_view=self._choice_coin_sell.result)
         working: bool = self._choice_cash_sell.work()
         if working:
             self._next_function.set(self._work_choice_cash_sell)  # еще не выбрано, повторить
@@ -91,7 +108,7 @@ class ScriptCoinTransfer:
         Команда сформировать id_safe_buy
         """
         if not self._choice_safe_buy:
-            self._choice_safe_buy = ChoiceSafe(self._connect_telebot, ModesChoiceSafe.VIEW,
+            self._choice_safe_buy = ChoiceSafe(self._connect_telebot, ModesChoiceSafe.CREATE,
                                                'Выберите тип сейфа пополнения:')
         working: bool = self._choice_safe_buy.work()
         if working:

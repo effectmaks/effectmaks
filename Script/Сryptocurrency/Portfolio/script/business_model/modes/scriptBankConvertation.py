@@ -2,7 +2,7 @@ import logging
 
 from business_model.choice.choicePriceAvr import ChoicePriceAvr
 from business_model.choice.choicecash import ChoiceCash
-from business_model.choice.choicecoin import ChoiceCoin
+from business_model.choice.choicecoin import ChoiceCoin, ModesChoiceCoin
 from business_model.choice.choicedate import ChoiceDate
 from business_model.choice.choicefloat import ChoiceFloat
 from business_model.choice.choicesafe import ChoiceSafe, ModesChoiceSafe
@@ -37,6 +37,7 @@ class ScriptBankConvertation:
         self._choice_amount_buy_before: ChoiceFloat = None
         self._choice_amount_buy_after: ChoiceFloat = None
         self._amount_buy: float
+        self._choice_coin_sell: ChoiceCoin = None
         self._choice_cash_sell: ChoiceCash = None
         self._choice_amount_sell_before: ChoiceFloat = None
         self._choice_amount_sell_after: ChoiceFloat = None
@@ -76,18 +77,18 @@ class ScriptBankConvertation:
             self._next_function.set(self._work_choice_safe)  # еще не выбрано, повторить
         else:
             logging.info('Выбран id_safe_user')
-            self._work_choice_coin()  # далее выполнить
+            self._work_choice_coin_buy()  # далее выполнить
 
-    def _work_choice_coin(self):
+    def _work_choice_coin_buy(self):
         """
         Команда сформировать coin buy
         """
         if not self._choice_coin_buy:
             self._choice_coin_buy = ChoiceCoin(self._connect_telebot, self._choice_safe.result.id_safe,
-                                               'Выберите монету/валюту для покупки:')
+                                               'Выберите монету/валюту для покупки:', ModesChoiceCoin.ADD)
         working: bool = self._choice_coin_buy.work()
         if working:
-            self._next_function.set(self._work_choice_coin)
+            self._next_function.set(self._work_choice_coin_buy)
         else:
             logging.info('Выбран coin buy')
             self._work_choice_amount_buy_before()  # далее выполнить
@@ -134,7 +135,7 @@ class ScriptBankConvertation:
             self._wait_calc_amount_buy_repeat()
             return
         self._connect_telebot.send_text(f'Объем покупки: {self._choice_coin_buy.result}: {self._amount_buy}')
-        self._work_choice_cash()  # далее выполнить
+        self._work_choice_coin_sell()  # далее выполнить
 
     def _wait_calc_amount_buy_repeat(self):
         b_working = self._question_yes_no.work()
@@ -149,13 +150,29 @@ class ScriptBankConvertation:
         else:
             raise ExceptionScriptBankConvertation(f'Юзер вводит неправильные числа.')
 
+    def _work_choice_coin_sell(self):
+        """
+        Команда сформировать coin sell
+        """
+        if not self._choice_coin_sell:
+            self._choice_coin_sell = ChoiceCoin(self._connect_telebot, self._choice_safe.result.id_safe,
+                                               'Выберите монету/валюту для продажи:', ModesChoiceCoin.VIEW)
+        working: bool = self._choice_coin_sell.work()
+        if working:
+            self._next_function.set(self._work_choice_coin_sell)
+        else:
+            logging.info('Выбран coin sell')
+            self._work_choice_cash()  # далее выполнить
+
     def _work_choice_cash(self):
         """
         Команда сформировать id_cash
         """
         if not self._choice_cash_sell:
             self._choice_cash_sell = ChoiceCash(self._connect_telebot, self._choice_safe.result.id_safe,
-                                                'Выберите счет продажи:', filter_coin=self._choice_coin_buy.result)
+                                                'Выберите счет продажи:',
+                                                filter_coin_delete=self._choice_coin_buy.result,
+                                                filter_coin_view=self._choice_coin_sell.result)
         working: bool = self._choice_cash_sell.work()
         if working:
             self._next_function.set(self._work_choice_cash)  # еще не выбрано, повторить

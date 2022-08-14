@@ -1,6 +1,6 @@
 import logging
 import os
-
+from enum import Enum
 from telebot import TeleBot, types
 
 
@@ -23,6 +23,12 @@ class FromUser:
     @property
     def id(self) -> int:
         return self._id_user
+
+
+class MessageType(Enum):
+    KEY = 'KEY'
+    VALUE = 'VALUE'
+    NONE = 'NONE'
 
 
 class Message:
@@ -52,7 +58,7 @@ class ConnectTelebot:
         return self._debug
 
     def send_text(self, text_send: str):
-        logging.info(f'Отправить текст юзеру ID {self._id_user}: "{text_send}"')
+        logging.info(f'Отправить текст юзеру ID {self._id_user}.')
         self._telebot.send_message(self._id_user, text=text_send, disable_web_page_preview=True)
         logging.info('Отправлено')
 
@@ -60,7 +66,8 @@ class ConnectTelebot:
     def id_user(self) -> int:
         return self._id_user
 
-    def view_keyboard(self, text_keyboard: str, list_view: list = None, dict_view: dict = None):
+    def view_keyboard(self, text_keyboard: str, list_view: list = None, dict_view: dict = None,
+                      type_message: MessageType = MessageType.VALUE):
         """
         Создание списка кнопок для юзера
         :param dict_text: Словарь с названиями кнопок
@@ -77,9 +84,11 @@ class ConnectTelebot:
                     key = types.InlineKeyboardButton(text=value, callback_data=value)
                     keyboard.add(key)  # добавляем кнопку
             else:
-                for value in dict_view.keys():
-                    key = types.InlineKeyboardButton(text=value, callback_data=value)
-                    keyboard.add(key)  # добавляем кнопку
+                for key, value in dict_view.items():
+                    if MessageType.VALUE == type_message:
+                        value = key
+                    keyboard_item = types.InlineKeyboardButton(text=value, callback_data=key)
+                    keyboard.add(keyboard_item)  # добавляем кнопку
             self._telebot.send_message(self._id_user, text=text_keyboard, reply_markup=keyboard)
         except Exception as err:
             raise ExceptionConnectTelebot(f'Ошибка создания клавиатуры - {self.view_keyboard.__name__}')

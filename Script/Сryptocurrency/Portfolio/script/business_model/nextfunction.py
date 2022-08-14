@@ -25,6 +25,7 @@ class NextFunction:
         :return:True - выполнилась функция
         """
         if self._next_function:
+            self._add_next_function = False
             self._next_function()
             if not self._add_next_function:
                 self._next_function = None

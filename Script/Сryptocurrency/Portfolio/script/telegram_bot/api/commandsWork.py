@@ -6,3 +6,4 @@ class CommandsWork:
     COMMAND_OUTPUT = '/bank_output'
     COMMAND_CONVERTATION = '/bank_convertation'
     COMMAND_COIN_TRANSFER = '/coin_transfer'
+    COMMAND_CASH_VIEW = '/cash_view'

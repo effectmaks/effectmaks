@@ -71,7 +71,7 @@ class ChoiceSafe:
             return
         result: bool = self._question_yes_no.result
         if result:
-            self._input_safe_type_check()  # Повторить
+            self._input_safe_type()  # Повторить
         else:
             raise ExceptionChoiceSafe('Юзер отказался повторять. Он не выбрал тип сейфа.')
 
