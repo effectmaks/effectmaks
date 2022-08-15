@@ -1,6 +1,7 @@
 import logging
 from typing import Dict
 from enum import Enum
+from decimal import Decimal
 
 from business_model.nextfunction import NextFunction
 from business_model.questionYesNo import QuestionYesNo
@@ -22,7 +23,7 @@ class TypeConvertatuion(Enum):
 class ChoicePriceAvrResult:
     def __init__(self):
         self.type_convertation: TypeConvertatuion = TypeConvertatuion.NONE
-        self.price_avr: float = 0
+        self.price_avr: Decimal = None
 
     def __bool__(self) -> bool:
         if self.price_avr != 0 and self.type_convertation != TypeConvertatuion.NONE:
@@ -31,7 +32,7 @@ class ChoicePriceAvrResult:
 
 
 class ChoicePriceAvr:
-    def __init__(self, connect_telebot: ConnectTelebot, amount_sell: float, amount_buy: float):
+    def __init__(self, connect_telebot: ConnectTelebot, amount_sell: Decimal, amount_buy: Decimal):
         self._connect_telebot = connect_telebot
         self._amount_sell = amount_sell
         self._amount_buy = amount_buy
@@ -48,9 +49,13 @@ class ChoicePriceAvr:
         logging.info(f'Режим вопроса - Выберите цену обмена:')
 
         self._dict_variants = {}
-        price_avr_1 = str(self._amount_sell / self._amount_buy)
+        number_1 = self._amount_sell / self._amount_buy
+        number_1 = number_1.quantize(Decimal('0.000001'))
+        price_avr_1 = str(number_1)
         self._dict_variants[price_avr_1] = TypeConvertatuion.BUY
-        price_avr_2 = str(self._amount_buy / self._amount_sell)
+        number_2 = self._amount_buy / self._amount_sell
+        number_2 = number_2.quantize(Decimal('0.000001'))
+        price_avr_2 = str(number_2)
         self._dict_variants[price_avr_2] = TypeConvertatuion.SELL
         self._connect_telebot.view_keyboard('Выберите цену обмена:', dict_view=self._dict_variants)
         self._next_function.set(self._price_answer)
@@ -87,10 +92,10 @@ class ChoicePriceAvr:
         self._result.type_convertation = self._dict_variants.get(message)
         self._result.price_avr = self._isfloat(message)
 
-    def _isfloat(self, value_str: str) -> float:
+    def _isfloat(self, value_str: str) -> Decimal:
         try:
             value_str = value_str.replace(',', '.')
-            return float(value_str)
+            return Decimal(value_str)
         except ValueError:
             pass
 

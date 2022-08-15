@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 
 from business_model.nextfunction import NextFunction
 from business_model.questionYesNo import QuestionYesNo
@@ -18,7 +19,7 @@ class ChoiceFloat:
         self._max_number = max_number
         self._next_function = NextFunction(ChoiceFloat.__name__)
         self._next_function.set(self._input_float_question)  # первое что выполнит скрипт
-        self._result_float: float = 0
+        self._result_float: Decimal = None
         self._zero = False
         self._question_yes_no: QuestionYesNo
 
@@ -55,7 +56,7 @@ class ChoiceFloat:
         self._question_yes_no = QuestionYesNo(self._connect_telebot, message_err)
         self._wait_answer_repeat()
 
-    def _check_min_max(self, result: float) -> bool:
+    def _check_min_max(self, result: Decimal) -> bool:
         if not self._max_number:
             return True
         if 0 <= result <= self._max_number:
@@ -72,15 +73,15 @@ class ChoiceFloat:
         else:
             raise ExceptionChoiceFloat(f'Невозможно преобразовать число - {self._connect_telebot.message}')
 
-    def _isfloat(self, value_str: str) -> float:
+    def _isfloat(self, value_str: str) -> Decimal:
         try:
             value_str = value_str.replace(',', '.')
-            return float(value_str)
+            return Decimal(value_str)
         except ValueError:
             pass
 
     @property
-    def result(self) -> float:
+    def result(self) -> Decimal:
         return self._result_float
 
     def work(self) -> bool:

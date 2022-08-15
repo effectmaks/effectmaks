@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 
 from business_model.choice.choicePriceAvr import ChoicePriceAvr
 from business_model.choice.choicecash import ChoiceCash
@@ -36,14 +37,13 @@ class ScriptBankConvertation:
         self._choice_coin_buy: ChoiceCoin = None
         self._choice_amount_buy_before: ChoiceFloat = None
         self._choice_amount_buy_after: ChoiceFloat = None
-        self._amount_buy: float
+        self._amount_buy: Decimal
         self._choice_coin_sell: ChoiceCoin = None
         self._choice_cash_sell: ChoiceCash = None
         self._choice_amount_sell_before: ChoiceFloat = None
         self._choice_amount_sell_after: ChoiceFloat = None
         self._choice_price_avr: ChoicePriceAvr = None
-        self._amount_sell: float
-        self._price_avr: float
+        self._amount_sell: Decimal
         self._choice_comment: ChoiceText = None
 
     def work(self):

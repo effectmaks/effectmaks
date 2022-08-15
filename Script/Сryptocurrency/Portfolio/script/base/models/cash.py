@@ -1,19 +1,27 @@
 import logging
 from typing import Dict
+from decimal import Decimal
+
 from peewee import DateTimeField, IntegerField, DoubleField, TextField, Model
 from base.sqlite.connectSqlite import ConnectSqlite, ExceptionInsert, ExceptionSelect, ExceptionDelete
 from datetime import datetime
 
 
+
 class CashItem:
-    def __init__(self, coin: str, amount: float, price_buy: float = 0, coin_avr: str = "",
-                 safe_name: str = "", safe_type: str = ""):
+    def __init__(self, coin: str, amount: Decimal, price_buy: Decimal = None, coin_avr: str = "",
+                 safe_name: str = "", safe_type: str = "", date_time: str = ""):
         self.coin = coin
-        self.amount = amount
-        self.price_buy = price_buy
+        self.amount = None
+        if amount:
+            self.amount = amount.quantize(Decimal('0.00000001'))
+        self.price_buy = None
+        if price_buy:
+            self.price_buy = price_buy.quantize(Decimal('0.00000001'))
         self.coin_avr = coin_avr
         self.safe_name = safe_name
         self.safe_type = safe_type
+        self.date_time = date_time
 
 
 class Cash(Model):
@@ -38,8 +46,8 @@ class ModelCash:
     __name_model = 'cash'
 
     @classmethod
-    def add(cls, id_safe_user: int = 0, date_time: datetime = None, coin: str = "", amount_buy: float = 0,
-            price_buy: float = 0, id_task: int = 0, coin_avr: str = "") -> int:
+    def add(cls, id_safe_user: int = 0, date_time: datetime = None, coin: str = "", amount_buy: Decimal = None,
+            price_buy: Decimal = None, id_task: int = 0, coin_avr: str = "") -> int:
         """
         Добавление счета покупки/конвертирование монеты(средства).
         Исключения: конвертации даты, добавления записи.
@@ -135,7 +143,8 @@ class ModelCash:
                                             format(id_safe_user))
             if cash_list:
                 for cash in cash_list:
-                    dict_out[cash[0]] = f'{cash[0]}: {cash[1]}'
+                    sum_amount = Decimal(cash[1]).quantize(Decimal("0.00000001"))
+                    dict_out[cash[0]] = f'{cash[0]}: {sum_amount}'
                 logging.info('Запрос выполнен')
                 return dict_out
             else:
@@ -163,24 +172,33 @@ class ModelCash:
         try:
             dict_out = {}
             connect = ConnectSqlite.get_connect()
-            cash_list = connect.execute_sql('select id, coin, amount, price_buy, coin_avr '
+            cash_list = connect.execute_sql('select id, coin, amount, price_buy, coin_avr, date_time '
                                             'from (select cash.id, cash.coin, (cash.amount_buy - '
                                             'CASE WHEN sum_cash_sell.amount IS NULL '
                                             'THEN 0 else sum_cash_sell.amount end) as amount, '
-                                            'cash.price_buy, cash.coin_avr '
+                                            'cash.price_buy, cash.coin_avr,cash.date_time '
                                             'from cash '
                                             'left join (select id_cash, sum(amount_sell) as amount '
                                             'from cashsell group by id_cash) as sum_cash_sell '
                                             'on cash.id = sum_cash_sell.id_cash '
                                             'where cash.id_safe_user = {} {} {}) '
-                                            'as filter_zero where amount <> 0 order by 2,4,3'.
+                                            'as filter_zero where amount <> 0 order by 6,2,4,3'.
                                             format(id_safe_user, sql_coin_del, sql_coin_view))
             for cash in cash_list:
-                dict_out[int(cash[0])] = CashItem(coin=cash[1], amount=cash[2], price_buy=cash[3], coin_avr=cash[4])
+                dict_out[int(cash[0])] = CashItem(coin=cash[1], amount=cls._get_decimal(cash[2]),
+                                                  price_buy=cls._get_decimal(cash[3]),
+                                                  coin_avr=cash[4], date_time=cash[5])
             logging.info('Запрос выполнен')
             return dict_out
         except Exception as err:
             raise ExceptionSelect(cls.__name_model, str(err))
+
+    @classmethod
+    def _get_decimal(cls, amount_in) -> Decimal:
+        amount = Decimal('0')
+        if amount_in:
+            amount = Decimal(amount_in)
+        return amount
 
     @classmethod
     def get_cash_user(cls, id_user: int) -> Dict[int, CashItem]:
@@ -207,7 +225,7 @@ class ModelCash:
             if cash_list:
                 for cash in cash_list:
                     dict_out[int(cash[0])] = CashItem(safe_name=cash[1], safe_type=cash[2], coin=cash[3],
-                                                      amount=cash[4])
+                                                      amount=Decimal(cash[4]))
                 logging.info('Запрос выполнен.')
                 return dict_out
             else:

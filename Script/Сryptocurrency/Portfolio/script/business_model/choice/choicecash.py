@@ -58,9 +58,9 @@ class ChoiceCash:
 
     def _key_value(self, item: CashItem) -> str:
         price_avr: str = f'({item.coin_avr} {item.price_buy})'
-        if price_avr in ["(None 0.0)", "( 0.0)"]:
+        if price_avr in ["(None 0.0)", "( 0.0)", "( None)"]:
             price_avr = '(-)'
-        return f'{item.coin}: {item.amount} {price_avr}'
+        return f'{item.date_time[:16]}   {item.coin}: {item.amount} {price_avr}'
 
     def _answer_choice_cash(self):
         """

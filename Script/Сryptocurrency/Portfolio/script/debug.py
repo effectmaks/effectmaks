@@ -1,5 +1,6 @@
 import logging
 import sys
+from decimal import Decimal
 from datetime import datetime
 
 from base.models.cash import Cash, ModelCash
@@ -16,6 +17,7 @@ logging.basicConfig(
 )
 
 if __name__ == '__main__':
-    cash = ModelCash.get_cash_coin()
+    a = '12345'
+    print(a[:16])
 
 

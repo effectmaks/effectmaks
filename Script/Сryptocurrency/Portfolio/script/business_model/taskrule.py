@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from decimal import Decimal
 
 from base.models.cash import ModelCash
 from base.models.cashsell import ModelCashSell
@@ -29,11 +30,11 @@ class TaskRule:
         self.id_safe_user: int = 0
         self.id_cash: int = 0
         self.coin: str = ""
-        self.amount: float = 0
-        self.amount_sell: float = 0
-        self.price_avr: float = 0
+        self.amount: Decimal = None
+        self.amount_sell: Decimal = 0
+        self.price_avr: Decimal = None
         self.type_convertation: TypeConvertatuion = TypeConvertatuion.NONE
-        self.fee: float = 0
+        self.fee: Decimal = None
         self.coin_avr: str = ""
         self._id_task: int = 0
 
