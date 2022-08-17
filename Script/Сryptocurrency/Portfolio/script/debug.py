@@ -4,6 +4,7 @@ from decimal import Decimal
 from datetime import datetime
 
 from base.models.cash import Cash, ModelCash
+from business_model.choice.folderChoiceFloat.questionAmount import TypesAnswerAmount
 from business_model.taskrule import TaskRule
 from telegram_bot.api.commandsWork import CommandsWork
 
@@ -17,7 +18,6 @@ logging.basicConfig(
 )
 
 if __name__ == '__main__':
-    a = '12345'
-    print(a[:16])
+    print(TypesAnswerAmount.REPEAT_AMOUNT)
 
 

@@ -1,6 +1,7 @@
 import logging
 from decimal import Decimal
 
+from business_model.choice.folderChoiceFloat.questionAmount import QuestionAmount, TypesAnswerAmount
 from business_model.helpers.nextfunction import NextFunction
 from business_model.helpers.questionYesNo import QuestionYesNo
 from telegram_bot.api.telegramApi import ConnectTelebot
@@ -19,6 +20,7 @@ class ChoiceFloat:
         self._max_number = max_number
         self._next_function = NextFunction(ChoiceFloat.__name__)
         self._next_function.set(self._input_float_question)  # первое что выполнит скрипт
+        self._question_amount: QuestionAmount
         self._result_float: Decimal = None
         self._zero = False
         self._question_yes_no: QuestionYesNo
@@ -46,11 +48,27 @@ class ChoiceFloat:
                 self._result_float = result_float
                 logging.info(f'Выбрано число - {self._result_float}')
             else:
-                logging.info(f'Число должно быть от 0 до {self._max_number}.')
-                self._err__float_answer(f'Число должно быть от 0 до {self._max_number}.')
+                self._set_question_amount()
         else:
             logging.info('Невозможно преобразовать число.')
             self._err__float_answer("Ошибка преобразования числа.")
+
+    def _set_question_amount(self):
+        logging.info(f'Число должно быть от 0 до {self._max_number}.')
+        self._question_amount = QuestionAmount(self._connect_telebot,
+                                               text_err='Введенный объем превышает объем счета.')
+        self._wait_question_amount()
+
+    def _wait_question_amount(self):
+        b_working = self._question_amount.work()
+        if b_working:
+            self._next_function.set(self._wait_question_amount)
+            return
+        result = self._question_amount.result
+        if result == TypesAnswerAmount.REPEAT_AMOUNT:
+            self._input_float_question()  # повторить ввод объема
+        else:
+            raise ExceptionChoiceFloat(f'Пользователь не выбрал пункт из списка AMOUNT')
 
     def _err__float_answer(self, message_err: str):
 
