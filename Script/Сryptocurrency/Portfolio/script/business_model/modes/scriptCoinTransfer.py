@@ -1,6 +1,6 @@
 import logging
 
-from business_model.choice.choicecash import ChoiceCash
+from business_model.choice.choicecash import ChoiceCash, ModesChoiceCash
 from business_model.choice.choicecoin import ChoiceCoin, ModesChoiceCoin
 from business_model.choice.choicefloat import ChoiceFloat
 from business_model.choice.choicetext import ChoiceText
@@ -94,7 +94,8 @@ class ScriptCoinTransfer:
         """
         if not self._choice_cash_sell:
             self._choice_cash_sell = ChoiceCash(self._connect_telebot, self._choice_safe_sell.result.id_safe,
-                                                'Выберите счет снятия:',
+                                                message='Выберите счет снятия:',
+                                                mode_work=ModesChoiceCash.ONE,
                                                 filter_coin_view=self._choice_coin_sell.result)
         working: bool = self._choice_cash_sell.work()
         if working:

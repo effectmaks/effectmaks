@@ -2,7 +2,7 @@ import logging
 from decimal import Decimal
 
 from business_model.choice.choicePriceAvr import ChoicePriceAvr
-from business_model.choice.choicecash import ChoiceCash
+from business_model.choice.choicecash import ChoiceCash, ModesChoiceCash
 from business_model.choice.choicecoin import ChoiceCoin, ModesChoiceCoin
 from business_model.choice.choicedate import ChoiceDate
 from business_model.choice.choicefloat import ChoiceFloat
@@ -170,7 +170,8 @@ class ScriptBankConvertation:
         """
         if not self._choice_cash_sell:
             self._choice_cash_sell = ChoiceCash(self._connect_telebot, self._choice_safe.result.id_safe,
-                                                'Выберите счет продажи:',
+                                                message='Выберите счет продажи:',
+                                                mode_work=ModesChoiceCash.ONE,
                                                 filter_coin_delete=self._choice_coin_buy.result,
                                                 filter_coin_view=self._choice_coin_sell.result)
         working: bool = self._choice_cash_sell.work()

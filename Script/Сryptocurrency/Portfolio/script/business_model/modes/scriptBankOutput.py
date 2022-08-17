@@ -1,6 +1,6 @@
 import logging
 
-from business_model.choice.choicecash import ChoiceCash
+from business_model.choice.choicecash import ChoiceCash, ModesChoiceCash
 from business_model.choice.choicefloat import ChoiceFloat
 from business_model.choice.choicetext import ChoiceText
 from business_model.nextfunction import NextFunction
@@ -72,7 +72,9 @@ class ScriptBankOutput:
         Команда сформировать id_safe_user
         """
         if not self._choice_cash:
-            self._choice_cash = ChoiceCash(self._connect_telebot, self._choice_safe.result.id_safe, 'Выберите счет вывода:')
+            self._choice_cash = ChoiceCash(self._connect_telebot, self._choice_safe.result.id_safe,
+                                           message='Выберите счет вывода:',
+                                           mode_work=ModesChoiceCash.ONE)
         working: bool = self._choice_cash.work()
         if working:
             self._next_function.set(self._work_choice_cash)  # еще не выбрано, повторить

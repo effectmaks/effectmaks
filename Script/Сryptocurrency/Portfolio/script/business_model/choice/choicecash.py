@@ -1,5 +1,6 @@
 import logging
 from typing import Dict
+from enum import Enum
 
 from base.models.cash import ModelCash, CashItem
 from business_model.nextfunction import NextFunction
@@ -21,6 +22,11 @@ class ChoiceCashResult:
         return False
 
 
+class ModesChoiceCash(Enum):
+    ONE = 'ONE'
+    LIST = 'LIST'
+
+
 class ExceptionChoiceCash(Exception):
     def __init__(self, err_message: str = ''):
         logging.error(f'Класс {ExceptionChoiceCash.__name__} - {err_message}')
@@ -28,18 +34,24 @@ class ExceptionChoiceCash(Exception):
 
 
 class ChoiceCash:
-    def __init__(self, connect_telebot: ConnectTelebot, id_safe_user: int, message: str,
+    def __init__(self, connect_telebot: ConnectTelebot, id_safe_user: int, message: str, mode_work: ModesChoiceCash,
                  filter_coin_delete: str = '', filter_coin_view: str = ''):
         self._connect_telebot = connect_telebot
-        self._next_function = NextFunction(ChoiceCash.__name__)
-        self._next_function.set(self._question_choice_cash)  # первое что выполнит скрипт
+        self._mode_work = mode_work
         self._message_str: str = message
+        self._next_function = NextFunction(ChoiceCash.__name__)
+
         self._dict_cash: Dict
 
         self._result = ChoiceCashResult()  # хранит результат выбора пользователя
         self._id_safe_user = id_safe_user
         self._filter_coin_delete = filter_coin_delete
         self._filter_coin_view = filter_coin_view
+        self._set_next_function()
+
+    def _set_next_function(self):
+        if self._mode_work == ModesChoiceCash.ONE:
+            self._next_function.set(self._question_choice_cash)  # первое что выполнит скрипт
 
     def _question_choice_cash(self):
         """
