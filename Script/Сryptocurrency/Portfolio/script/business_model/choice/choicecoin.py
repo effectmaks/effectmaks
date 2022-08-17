@@ -4,8 +4,8 @@ from typing import Dict
 
 from base.models.cash import ModelCash
 from base.models.coin import ModelCoin
-from business_model.nextfunction import NextFunction
-from business_model.questionYesNo import QuestionYesNo
+from business_model.helpers.nextfunction import NextFunction
+from business_model.helpers.questionYesNo import QuestionYesNo
 from telegram_bot.api.telegramApi import ConnectTelebot, MessageType
 
 

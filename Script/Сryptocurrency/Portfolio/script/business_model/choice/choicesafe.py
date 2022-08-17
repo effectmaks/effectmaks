@@ -2,8 +2,8 @@ import logging
 
 from base.models.safelist import Safetypes, ModelSafelist
 from base.models.safeuser import ModelSafeuser
-from business_model.nextfunction import NextFunction
-from business_model.questionYesNo import QuestionYesNo
+from business_model.helpers.nextfunction import NextFunction
+from business_model.helpers.questionYesNo import QuestionYesNo
 from telegram_bot.api.telegramApi import ConnectTelebot
 
 

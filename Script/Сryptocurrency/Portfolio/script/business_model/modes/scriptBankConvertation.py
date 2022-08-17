@@ -8,8 +8,8 @@ from business_model.choice.choicedate import ChoiceDate
 from business_model.choice.choicefloat import ChoiceFloat
 from business_model.choice.choicesafe import ChoiceSafe, ModesChoiceSafe
 from business_model.choice.choicetext import ChoiceText
-from business_model.nextfunction import NextFunction
-from business_model.questionYesNo import QuestionYesNo
+from business_model.helpers.nextfunction import NextFunction
+from business_model.helpers.questionYesNo import QuestionYesNo
 from business_model.taskrule import TaskRule
 from telegram_bot.api.commandsWork import CommandsWork
 from telegram_bot.api.telegramApi import ConnectTelebot

@@ -1,5 +1,5 @@
 from telegram_bot.api.telegramApi import ConnectTelebot
-from business_model.nextfunction import NextFunction
+from business_model.helpers.nextfunction import NextFunction
 
 
 class QuestionYesNo:

@@ -3,7 +3,7 @@ import logging
 from business_model.choice.choicecash import ChoiceCash, ModesChoiceCash
 from business_model.choice.choicefloat import ChoiceFloat
 from business_model.choice.choicetext import ChoiceText
-from business_model.nextfunction import NextFunction
+from business_model.helpers.nextfunction import NextFunction
 from telegram_bot.api.commandsWork import CommandsWork
 from telegram_bot.api.telegramApi import ConnectTelebot
 from business_model.taskrule import TaskRule

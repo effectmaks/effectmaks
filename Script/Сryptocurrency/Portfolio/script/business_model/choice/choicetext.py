@@ -1,6 +1,6 @@
 import logging
 
-from business_model.nextfunction import NextFunction
+from business_model.helpers.nextfunction import NextFunction
 from telegram_bot.api.telegramApi import ConnectTelebot
 
 

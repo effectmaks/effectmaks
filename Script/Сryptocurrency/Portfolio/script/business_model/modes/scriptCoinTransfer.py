@@ -4,7 +4,7 @@ from business_model.choice.choicecash import ChoiceCash, ModesChoiceCash
 from business_model.choice.choicecoin import ChoiceCoin, ModesChoiceCoin
 from business_model.choice.choicefloat import ChoiceFloat
 from business_model.choice.choicetext import ChoiceText
-from business_model.nextfunction import NextFunction
+from business_model.helpers.nextfunction import NextFunction
 from telegram_bot.api.commandsWork import CommandsWork
 from telegram_bot.api.telegramApi import ConnectTelebot
 from business_model.taskrule import TaskRule
@@ -157,6 +157,8 @@ class ScriptCoinTransfer:
         self._fee = self._choice_amount_sell.result - self._choice_amount_buy.result
         self._connect_telebot.send_text(f'Комиссия составила: {self._fee}')
         self._work_choice_comment()  # далее выполнить
+
+
 
     def _work_choice_comment(self):
         """

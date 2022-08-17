@@ -1,8 +1,8 @@
 import logging
 from datetime import datetime
 from telegram_bot.api.telegramApi import ConnectTelebot
-from business_model.nextfunction import NextFunction
-from business_model.questionYesNo import QuestionYesNo
+from business_model.helpers.nextfunction import NextFunction
+from business_model.helpers.questionYesNo import QuestionYesNo
 
 
 class ExceptionChoiceDate(Exception):

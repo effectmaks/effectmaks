@@ -1,8 +1,8 @@
 import logging
 from decimal import Decimal
 
-from business_model.nextfunction import NextFunction
-from business_model.questionYesNo import QuestionYesNo
+from business_model.helpers.nextfunction import NextFunction
+from business_model.helpers.questionYesNo import QuestionYesNo
 from telegram_bot.api.telegramApi import ConnectTelebot
 
 
@@ -53,6 +53,7 @@ class ChoiceFloat:
             self._err__float_answer("Ошибка преобразования числа.")
 
     def _err__float_answer(self, message_err: str):
+
         self._question_yes_no = QuestionYesNo(self._connect_telebot, message_err)
         self._wait_answer_repeat()
 
