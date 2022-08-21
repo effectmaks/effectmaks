@@ -82,7 +82,7 @@ class ModelSafeuser:
         return cls.__create(id_user, id_safe)
 
     @classmethod
-    def get_dict(cls, id_user: int, type_name: str) -> dict:
+    def get_dict(cls, id_user: int, type_name: str, view_no_safe_id: int) -> dict:
         """
         Выгрузить все сейфы юзера
         """
@@ -90,7 +90,9 @@ class ModelSafeuser:
         try:
             safes_user = Safeuser.select(Safeuser.id, Safelist.name)\
                                        .join(Safelist, on=(Safelist.id == Safeuser.id_safe))\
-                                       .where(Safeuser.id_user == id_user, Safelist.type == type_name)\
+                                       .where(Safeuser.id_user == id_user,
+                                              Safelist.type == type_name,
+                                              Safeuser.id != view_no_safe_id)\
                                        .order_by(Safelist.name)
             if safes_user:
                 for sel in safes_user:

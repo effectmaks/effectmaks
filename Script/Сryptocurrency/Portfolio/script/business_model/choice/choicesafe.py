@@ -31,14 +31,20 @@ class ChoiceSafeResult:
 
 
 class ChoiceSafe:
-    def __init__(self, connect_telebot: ConnectTelebot, mode_now: str, message: str):
+    def __init__(self,
+                 connect_telebot: ConnectTelebot,
+                 mode_now: str,
+                 message: str,
+                 view_no_safe_id: int = 0):
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(ChoiceSafe.__name__)
         self._next_function.set(self._input_safe_type)  # первое что выполнит скрипт
-        self._result = ChoiceSafeResult() # класс хранит результат выбора пользователя
+        self._result = ChoiceSafeResult()  # класс хранит результат выбора пользователя
         self._MODE_ADD = 'ДОБАВИТЬ'
         self._mode_now = mode_now
         self._message = message
+        self._view_no_safe_id = view_no_safe_id
+
 
     def _input_safe_type(self):
         """
@@ -80,7 +86,9 @@ class ChoiceSafe:
         Режим показать сейфы с типом self._task_rule.safe_type
         """
         logging.info(f'Режим показать сейфы с типом "{self._result.safe_type}"')
-        safes_dict = ModelSafeuser.get_dict(self._connect_telebot.id_user, type_name=self._result.safe_type)
+        safes_dict = ModelSafeuser.get_dict(self._connect_telebot.id_user,
+                                            type_name=self._result.safe_type,
+                                            view_no_safe_id=self._view_no_safe_id)
         if not safes_dict:
             if self._mode_now == ModesChoiceSafe.VIEW:
                 self._connect_telebot.send_text(f'У вас нет сейфов типа "{self._result.safe_type}".')

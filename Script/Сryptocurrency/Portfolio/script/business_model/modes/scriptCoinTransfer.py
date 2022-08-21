@@ -109,8 +109,10 @@ class ScriptCoinTransfer:
         Команда сформировать id_safe_buy
         """
         if not self._choice_safe_buy:
-            self._choice_safe_buy = ChoiceSafe(self._connect_telebot, ModesChoiceSafe.CREATE,
-                                               'Выберите тип сейфа пополнения:')
+            self._choice_safe_buy = ChoiceSafe(self._connect_telebot,
+                                               ModesChoiceSafe.CREATE,
+                                               message='Выберите тип сейфа пополнения:',
+                                               view_no_safe_id=self._choice_safe_sell.result.id_safe)
         working: bool = self._choice_safe_buy.work()
         if working:
             self._next_function.set(self._work_choice_safe_buy)  # еще не выбрано, повторить
