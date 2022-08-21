@@ -1,7 +1,7 @@
 import logging
 from enum import Enum
 
-from telegram_bot.api.telegramApi import ConnectTelebot
+from telegram_bot.api.telegramApi import ConnectTelebot, MessageType
 from business_model.helpers.nextfunction import NextFunction
 
 
@@ -23,9 +23,9 @@ class QuestionAmount:
         self._next_function = NextFunction(QuestionAmount.__name__)
         self._next_function.set(self._set_question)
 
-        self._list_options = [TypesAnswerAmount.REPEAT_AMOUNT,
-                              TypesAnswerAmount.CHOICE_CASH.name,
-                              TypesAnswerAmount.CANCEL.name]
+        self._dict_options = {TypesAnswerAmount.REPEAT_AMOUNT.name: 'ВВЕСТИ ОБЪЕМ',
+                              TypesAnswerAmount.CHOICE_CASH.name: 'ДОБАВИТЬ СЧЕТ',
+                              TypesAnswerAmount.CANCEL.name: 'ОТМЕНИТЬ'}
         self._choice: TypesAnswerAmount = None
         self._result: bool = False
         self._text_err: str = text_err
@@ -35,11 +35,13 @@ class QuestionAmount:
         Сформировать вопрос Что делать с объемом?
         """
         logging.info('Режим вопрос Что делать с объемом?')
-        self._connect_telebot.view_keyboard(f'{self._text_err}\nВыберите действие:', list_view=self._list_options)
+        self._connect_telebot.view_keyboard(f'{self._text_err}\nВыберите действие:',
+                                            dict_view=self._dict_options,
+                                            type_message=MessageType.KEY)
         self._next_function.set(self._answer)
 
     def _answer(self):
-        if self._connect_telebot.message in self._list_options:
+        if self._connect_telebot.message in self._dict_options.keys():
             if self._connect_telebot.message == TypesAnswerAmount.REPEAT_AMOUNT.name:
                 self._choice = TypesAnswerAmount.REPEAT_AMOUNT
             elif self._connect_telebot.message == TypesAnswerAmount.CHOICE_CASH.name:
