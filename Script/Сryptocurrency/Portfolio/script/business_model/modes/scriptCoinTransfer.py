@@ -160,8 +160,6 @@ class ScriptCoinTransfer:
         self._connect_telebot.send_text(f'Комиссия составила: {self._fee}')
         self._work_choice_comment()  # далее выполнить
 
-
-
     def _work_choice_comment(self):
         """
         Команда сформировать comment

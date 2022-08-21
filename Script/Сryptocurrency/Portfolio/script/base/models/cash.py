@@ -153,20 +153,20 @@ class ModelCash:
             raise ExceptionSelect(cls.__name_model, str(err))
 
     @classmethod
-    def dict_amount(cls, id_safe_user: int, filter_coin_del: str = '',
+    def dict_amount(cls, id_safe_user: int, filter_coin_view_no: str = '',
                     filter_coin_view: str = '') -> Dict:
         """
         Запрос объема все счетов у сейфа
         :param filter_coin_view:
-        :param filter_coin_del:
+        :param filter_coin_view_no:
         :param id_safe_user: ID сейфа юзера
         :return: Словарь со счетами их названиями объемом и ID
         """
         logging.info('Запрос объема все счетов у сейфа.')
         sql_coin_del = ''
         sql_coin_view = ''
-        if filter_coin_del != '':
-            sql_coin_del = f'and not cash.coin = "{filter_coin_del}"'
+        if filter_coin_view_no != '':
+            sql_coin_del = f'and not cash.coin = "{filter_coin_view_no}"'
         if filter_coin_view != '':
             sql_coin_view = f'and cash.coin = "{filter_coin_view}"'
         try:

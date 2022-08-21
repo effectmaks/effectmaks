@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from typing import Dict, List
 from enum import Enum
 
 from base.models.cash import ModelCash, CashItem
@@ -35,7 +35,7 @@ class ExceptionChoiceCash(Exception):
 
 class ChoiceCash:
     def __init__(self, connect_telebot: ConnectTelebot, id_safe_user: int, message: str, mode_work: ModesChoiceCash,
-                 filter_coin_delete: str = '', filter_coin_view: str = ''):
+                 _filter_coin_view_no: str = '', filter_coin_view: str = ''):
         self._connect_telebot = connect_telebot
         self._mode_work = mode_work
         self._message_str: str = message
@@ -45,8 +45,8 @@ class ChoiceCash:
 
         self._result = ChoiceCashResult()  # хранит результат выбора пользователя
         self._id_safe_user = id_safe_user
-        self._filter_coin_delete = filter_coin_delete
-        self._filter_coin_view = filter_coin_view
+        self._filter_coin_view_no = _filter_coin_view_no  # не показывать монету в сейфе
+        self._filter_coin_view = filter_coin_view  # показывать только эту монету в сейфе
         self._set_next_function()
 
     def _set_next_function(self):
@@ -58,7 +58,7 @@ class ChoiceCash:
         Режим показать счета у сейфа
         """
         logging.info('Режим показать счета у сейфа')
-        self._dict_cash: Dict[int, CashItem] = ModelCash.dict_amount(self._id_safe_user, self._filter_coin_delete,
+        self._dict_cash: Dict[int, CashItem] = ModelCash.dict_amount(self._id_safe_user, self._filter_coin_view_no,
                                                                      self._filter_coin_view)
         if not self._dict_cash:
             self._connect_telebot.send_text('В сейфе нет счетов для продажи.')
