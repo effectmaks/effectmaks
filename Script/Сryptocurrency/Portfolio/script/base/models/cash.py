@@ -1,11 +1,10 @@
 import logging
-from typing import Dict
+from typing import Dict, List
 from decimal import Decimal
 
 from peewee import DateTimeField, IntegerField, DoubleField, TextField, Model
 from base.sqlite.connectSqlite import ConnectSqlite, ExceptionInsert, ExceptionSelect, ExceptionDelete
 from datetime import datetime
-
 
 
 class CashItem:
@@ -154,7 +153,7 @@ class ModelCash:
 
     @classmethod
     def dict_amount(cls, id_safe_user: int, filter_coin_view_no: str = '',
-                    filter_coin_view: str = '') -> Dict:
+                    filter_coin_view: str = '', list_cash_no_view: List[int] = None) -> Dict:
         """
         Запрос объема все счетов у сейфа
         :param filter_coin_view:
@@ -163,15 +162,38 @@ class ModelCash:
         :return: Словарь со счетами их названиями объемом и ID
         """
         logging.info('Запрос объема все счетов у сейфа.')
-        sql_coin_del = ''
+        sql_coin_no_view = ''
+        sql_cash_no_view: str = ''
         sql_coin_view = ''
         if filter_coin_view_no != '':
-            sql_coin_del = f'and not cash.coin = "{filter_coin_view_no}"'
+            sql_coin_no_view = f'and not cash.coin = "{filter_coin_view_no}"'
         if filter_coin_view != '':
             sql_coin_view = f'and cash.coin = "{filter_coin_view}"'
+        if list_cash_no_view != None:
+            str_id: str = ''
+            str_end = ''
+            for item in list_cash_no_view:
+                str_id += str(item) + str_end
+                str_end = ','
+            sql_cash_no_view = f'and not cash.id in ({str_id})'
         try:
             dict_out = {}
             connect = ConnectSqlite.get_connect()
+            print('select id, coin, amount, price_buy, coin_avr, date_time '
+                                            'from (select cash.id, cash.coin, (cash.amount_buy - '
+                                            'CASE WHEN sum_cash_sell.amount IS NULL '
+                                            'THEN 0 else sum_cash_sell.amount end) as amount, '
+                                            'cash.price_buy, cash.coin_avr,cash.date_time '
+                                            'from cash '
+                                            'left join (select id_cash, sum(amount_sell) as amount '
+                                            'from cashsell group by id_cash) as sum_cash_sell '
+                                            'on cash.id = sum_cash_sell.id_cash '
+                                            'where cash.id_safe_user = {} {} {} {}) '
+                                            'as filter_zero where amount <> 0 order by 6,2,4,3'.
+                                            format(id_safe_user,
+                                                   sql_coin_no_view,
+                                                   sql_coin_view,
+                                                   sql_cash_no_view))
             cash_list = connect.execute_sql('select id, coin, amount, price_buy, coin_avr, date_time '
                                             'from (select cash.id, cash.coin, (cash.amount_buy - '
                                             'CASE WHEN sum_cash_sell.amount IS NULL '
@@ -181,9 +203,12 @@ class ModelCash:
                                             'left join (select id_cash, sum(amount_sell) as amount '
                                             'from cashsell group by id_cash) as sum_cash_sell '
                                             'on cash.id = sum_cash_sell.id_cash '
-                                            'where cash.id_safe_user = {} {} {}) '
+                                            'where cash.id_safe_user = {} {} {} {}) '
                                             'as filter_zero where amount <> 0 order by 6,2,4,3'.
-                                            format(id_safe_user, sql_coin_del, sql_coin_view))
+                                            format(id_safe_user,
+                                                   sql_coin_no_view,
+                                                   sql_coin_view,
+                                                   sql_cash_no_view))
             for cash in cash_list:
                 dict_out[int(cash[0])] = CashItem(coin=cash[1], amount=cls._get_decimal(cash[2]),
                                                   price_buy=cls._get_decimal(cash[3]),

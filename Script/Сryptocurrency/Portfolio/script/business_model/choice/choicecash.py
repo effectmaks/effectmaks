@@ -1,6 +1,7 @@
 import logging
 from typing import Dict, List
 from enum import Enum
+from decimal import Decimal
 
 from base.models.cash import ModelCash, CashItem
 from business_model.helpers.nextfunction import NextFunction
@@ -10,10 +11,10 @@ from telegram_bot.api.telegramApi import ConnectTelebot, MessageType
 
 class ChoiceCashResult:
     def __init__(self):
-        self.max_number: float = 0
+        self.amount: Decimal = Decimal(0)
         self.id_cash: int = 0
         self.coin: str = ""
-        self.price_buy: float = 0
+        self.price_buy: Decimal = Decimal(0)
         self.coin_avr: str = ""
 
     def __bool__(self) -> bool:
@@ -34,32 +35,46 @@ class ExceptionChoiceCash(Exception):
 
 
 class ChoiceCash:
-    def __init__(self, connect_telebot: ConnectTelebot, id_safe_user: int, message: str, mode_work: ModesChoiceCash,
-                 _filter_coin_view_no: str = '', filter_coin_view: str = ''):
+    def __init__(self, connect_telebot: ConnectTelebot,
+                 id_safe_user: int,
+                 message: str,
+                 filter_coin_view_no: str = '',
+                 filter_coin_view: str = ''):
+        logging.info(f'Создание объекта {ChoiceCash.__name__}')
         self._connect_telebot = connect_telebot
-        self._mode_work = mode_work
+        self._mode_work = ModesChoiceCash.ONE
         self._message_str: str = message
         self._next_function = NextFunction(ChoiceCash.__name__)
-
         self._dict_cash: Dict
-
-        self._result = ChoiceCashResult()  # хранит результат выбора пользователя
+        self._list_result: List[ChoiceCashResult] = []  # хранит результат выбора пользователя
         self._id_safe_user = id_safe_user
-        self._filter_coin_view_no = _filter_coin_view_no  # не показывать монету в сейфе
+        self._filter_coin_view_no = filter_coin_view_no  # не показывать монету в сейфе
         self._filter_coin_view = filter_coin_view  # показывать только эту монету в сейфе
         self._set_next_function()
+        self._work: bool = True  # Когда все сделано закончить работу. Сейчас выбор cash в работе
+        self._amount_sell = Decimal(0)
+        self._amount_sell_left = Decimal(0)
+        self._list_cash_no_view: List[int] = []
 
     def _set_next_function(self):
+        """
+        Выбор следующей функции в зависимости от режима
+        :return:
+        """
         if self._mode_work == ModesChoiceCash.ONE:
             self._next_function.set(self._question_choice_cash)  # первое что выполнит скрипт
+        if self._mode_work == ModesChoiceCash.LIST:
+            self._next_function.set(self._check_last_cash)  # первое что выполнит скрипт
 
     def _question_choice_cash(self):
         """
         Режим показать счета у сейфа
         """
         logging.info('Режим показать счета у сейфа')
-        self._dict_cash: Dict[int, CashItem] = ModelCash.dict_amount(self._id_safe_user, self._filter_coin_view_no,
-                                                                     self._filter_coin_view)
+        self._dict_cash: Dict[int, CashItem] = ModelCash.dict_amount(id_safe_user=self._id_safe_user,
+                                                                     filter_coin_view_no=self._filter_coin_view_no,
+                                                                     filter_coin_view=self._filter_coin_view,
+                                                                     list_cash_no_view=self._list_cash_no_view)
         if not self._dict_cash:
             self._connect_telebot.send_text('В сейфе нет счетов для продажи.')
             raise ExceptionChoiceCash('В сейфе нет счетов для продажи.')
@@ -83,11 +98,18 @@ class ChoiceCash:
             cash_key = int(self._connect_telebot.message)
             if cash_key in self._dict_cash.keys():
                 logging.info(f'Выбран id_cash: {cash_key}')
-                self._result.id_cash = cash_key
-                self._result.max_number = self._dict_cash.get(cash_key).amount
-                self._result.coin = self._dict_cash.get(cash_key).coin
-                self._result.price_buy = self._dict_cash.get(cash_key).price_buy
-                self._result.coin_avr = self._dict_cash.get(cash_key).coin_avr
+                result = ChoiceCashResult()
+                result.id_cash = cash_key
+                result.amount = self._dict_cash.get(cash_key).amount
+                result.coin = self._dict_cash.get(cash_key).coin
+                result.price_buy = self._dict_cash.get(cash_key).price_buy
+                result.coin_avr = self._dict_cash.get(cash_key).coin_avr
+                self._result_list_join(result)
+                self._list_cash_no_view.append(result.id_cash)
+                if self._mode_work == ModesChoiceCash.LIST:
+                    self._check_last_cash()  # Проверка достаточно счетов?
+                elif self._mode_work == ModesChoiceCash.ONE:
+                    self._work = False  # Выбрали одну ячейку и закончить работу
             else:
                 self._err_answer_choice_cash()
         except Exception as err:
@@ -110,11 +132,87 @@ class ChoiceCash:
         else:
             raise ExceptionChoiceCash('Юзер отказался выбирать счет.')
 
+    def _result_list_join(self, item: ChoiceCashResult):
+        """
+        Добавляет в результат работы ячейку листа.
+        :param item: Ячейка для добавления
+        """
+        logging.info(f'Добавить в результат ID счет: {item.id_cash}')
+        self._list_result.append(item)
+
+    def _calc_amount_sell_left(self) -> Decimal:
+        """
+        Высчитывает сколько осталось объема для перевода в зависимости от выбранных счетов
+        :return:
+        """
+        amount_sell_sum = Decimal(0)
+        for item in self._list_result:
+            amount_sell_sum += item.amount
+        return self._amount_sell - amount_sell_sum
+
+    def _check_last_cash(self):
+        """
+        Проверка достаточно выбрано счетов чтобы заполнить объем продажи self._amount_sell.
+        Если НЕТ команда на добавить
+        :return:
+        """
+        logging.info('Проверить достаточно выбрано счетов.')
+        result_left = self._calc_amount_sell_left()
+        if result_left > 0:
+            logging.info(f'Требуется {self._amount_sell} осталось {result_left}.')
+            self._question_choice_cash()
+            return
+        logging.info('Счетов достаточно')
+        self._amount_cash_last_edit(result_left)
+        self._work = False
+
+    def _amount_cash_last_edit(self, amount_minus: Decimal):
+        """
+        Изменяет объем продажи последней выбранной ячейки
+        """
+        logging.info('Изменить объем продажи последней ячейки')
+        count = len(self._list_result)
+        self._list_result[count-1].amount += amount_minus
+
     @property
-    def result(self) -> ChoiceCashResult:
-        return self._result
+    def result_first_item(self) -> ChoiceCashResult:
+        """
+        В режиме запроса на один счет ModesChoiceCash.ONE
+        :return: ChoiceCashResult инфо счета
+        """
+        if self._list_result:
+            return self._list_result[0]
+        else:
+            raise ExceptionChoiceCash('Запрос на результат. Массив пустой.')
+
+    @property
+    def list_result(self) -> List[ChoiceCashResult]:
+        """
+        В режиме запроса на лист из счетов ModesChoiceCash.LIST
+        :return: Лист с ChoiceCashResult инфо счета
+        """
+        if self._list_result:
+            return self._list_result
 
     def work(self) -> bool:
+        """
+        Проверка режим выбора cash в работе
+        :return:
+        """
         self._next_function.work()
-        if not self._result:
-            return True
+        return self._work
+
+    def set_type_amount_list(self, amount_sell: Decimal):
+        """
+        Установить режим поиска дополнительных счетов
+        :return:
+        """
+        logging.info('Установка режима ModesChoiceCash.LIST')
+        self._mode_work = ModesChoiceCash.LIST
+        self._amount_sell = amount_sell
+        id_cash_no_view = self.result_first_item.id_cash
+        self._list_cash_no_view.append(id_cash_no_view)
+        self._set_next_function()
+
+
+

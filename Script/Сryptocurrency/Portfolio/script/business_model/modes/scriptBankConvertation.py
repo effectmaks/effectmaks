@@ -171,8 +171,7 @@ class ScriptBankConvertation:
         if not self._choice_cash_sell:
             self._choice_cash_sell = ChoiceCash(self._connect_telebot, self._choice_safe.result.id_safe,
                                                 message='Выберите счет продажи:',
-                                                mode_work=ModesChoiceCash.ONE,
-                                                filter_coin_delete=self._choice_coin_buy.result,
+                                                filter_coin_view_no=self._choice_coin_buy.result,
                                                 filter_coin_view=self._choice_coin_sell.result)
         working: bool = self._choice_cash_sell.work()
         if working:
@@ -186,10 +185,10 @@ class ScriptBankConvertation:
         Команда сформировать amount sell before
         """
         if not self._choice_amount_sell_before:
-            max_number = self._choice_cash_sell.result.max_number
+            max_number = self._choice_cash_sell.result_first_item.amount
             self._choice_amount_sell_before = ChoiceFloat(self._connect_telebot,
                                                           question_main=f'Введите сколько было '
-                                                                        f'{self._choice_cash_sell.result.coin} до '
+                                                                        f'{self._choice_cash_sell.result_first_item.coin} до '
                                                                         f'продажи:', max_number=max_number)
         working: bool = self._choice_amount_sell_before.work()
         if working:
@@ -203,10 +202,10 @@ class ScriptBankConvertation:
         Команда сформировать amount sell after
         """
         if not self._choice_amount_sell_after:
-            max_number = self._choice_cash_sell.result.max_number
+            max_number = self._choice_cash_sell.result_first_item.amount
             self._choice_amount_sell_after = ChoiceFloat(self._connect_telebot,
                                                          question_main=f'Введите объем '
-                                                                       f'{self._choice_cash_sell.result.coin} после '
+                                                                       f'{self._choice_cash_sell.result_first_item.coin} после '
                                                                        f'продажи:', max_number=max_number)
         working: bool = self._choice_amount_sell_after.work()
         if working:
@@ -226,7 +225,7 @@ class ScriptBankConvertation:
                                                                          f"- не может быть отрицательным.")
             self._wait_calc_amount_sell_repeat()
             return
-        self._connect_telebot.send_text(f'Объем продажи {self._choice_cash_sell.result.coin}: {self._amount_sell}')
+        self._connect_telebot.send_text(f'Объем продажи {self._choice_cash_sell.result_first_item.coin}: {self._amount_sell}')
         self._work_price_avr()  # далее выполнить
 
     def _wait_calc_amount_sell_repeat(self):
@@ -257,7 +256,7 @@ class ScriptBankConvertation:
             logging.info('Выбран price_avr')
             self._connect_telebot.send_text(f'Цена {self._choice_price_avr.result.type_convertation.name} '
                                             f'{self._choice_coin_buy.result}/'
-                                            f'{self._choice_cash_sell.result.coin}: '
+                                            f'{self._choice_cash_sell.result_first_item.coin}: '
                                             f'{self._choice_price_avr.result.price_avr}')
             self._work_choice_comment()  # далее выполнить
 
@@ -283,12 +282,12 @@ class ScriptBankConvertation:
         task_rule.coin = self._choice_coin_buy.result
         task_rule.amount = self._amount_buy
 
-        task_rule.id_cash = self._choice_cash_sell.result.id_cash  # Откуда снимать
+        task_rule.id_cash = self._choice_cash_sell.result_first_item.id_cash  # Откуда снимать
         task_rule.amount_sell = self._amount_sell
         task_rule.id_safe_user = self._choice_safe.result.id_safe
         task_rule.price_avr = self._choice_price_avr.result.price_avr
         task_rule.type_convertation = self._choice_price_avr.result.type_convertation
-        task_rule.coin_avr = self._choice_cash_sell.result.coin
+        task_rule.coin_avr = self._choice_cash_sell.result_first_item.coin
         task_rule.comment = self._choice_comment.result
         task_rule.run()
         self._connect_telebot.send_text('Команда выполнена.')

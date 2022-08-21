@@ -4,6 +4,7 @@ from business_model.choice.choicecash import ChoiceCash, ModesChoiceCash
 from business_model.choice.choicecoin import ChoiceCoin, ModesChoiceCoin
 from business_model.choice.folderChoiceFloat.choicefloat import ChoiceFloat
 from business_model.choice.choicetext import ChoiceText
+from business_model.choice.folderChoiceFloat.questionAmount import TypesAnswerAmount
 from business_model.helpers.nextfunction import NextFunction
 from telegram_bot.api.commandsWork import CommandsWork
 from telegram_bot.api.telegramApi import ConnectTelebot
@@ -69,7 +70,9 @@ class ScriptCoinTransfer:
                                                 'Выберите тип сейфа снятия:')
         working: bool = self._choice_safe_sell.work()
         if working:
+            print(3)
             self._next_function.set(self._work_choice_safe_sell)  # еще не выбрано, повторить
+            print(4)
         else:
             logging.info('Выбран id_safe_sell')
             self._work_choice_coin_sell()  # далее выполнить
@@ -95,7 +98,6 @@ class ScriptCoinTransfer:
         if not self._choice_cash_sell:
             self._choice_cash_sell = ChoiceCash(self._connect_telebot, self._choice_safe_sell.result.id_safe,
                                                 message='Выберите счет снятия:',
-                                                mode_work=ModesChoiceCash.ONE,
                                                 filter_coin_view=self._choice_coin_sell.result)
         working: bool = self._choice_cash_sell.work()
         if working:
@@ -127,13 +129,36 @@ class ScriptCoinTransfer:
         if not self._choice_amount_sell:
             self._choice_amount_sell = ChoiceFloat(self._connect_telebot,
                                                    question_main=f'Введите сколько было выведено '
-                                                                 f'{self._choice_cash_sell.result.coin}:',
-                                                   max_number=self._choice_cash_sell.result.max_number)
+                                                                 f'{self._choice_cash_sell.result_first_item.coin}:',
+                                                   max_number=self._choice_cash_sell.result_first_item.amount)
         working: bool = self._choice_amount_sell.work()
         if working:
             self._next_function.set(self._work_choice_amount_first)  # еще не выбрано, повторить
         else:
+            self._check_work_choice_amount_first()
+
+    def _check_work_choice_amount_first(self):
+        """
+        Проверить выбрано число или нужно выбирать дополнительные счета
+        :return:
+        """
+        if self._choice_amount_sell.choice_type_amount == TypesAnswerAmount.CHOICE_CASH:
+            self._choice_cash_sell.set_type_amount_list(self._choice_amount_sell.result)
+            self._work_choice_cash_sell_list()  # выбрать дополнительные счета
+        else:
             logging.info('Выбран _choice_amount_sell')
+            self._work_choice_amount_second()  # далее выполнить
+
+    def _work_choice_cash_sell_list(self):
+        """
+        Выбрать дополнительные счета для продажи в режиме CHOICE_CASH
+        """
+        logging.info('Работа _choice_cash_sell в режиме CHOICE_CASH')
+        working: bool = self._choice_cash_sell.work()
+        if working:
+            self._next_function.set(self._work_choice_cash_sell)  # еще не выбрано, повторить
+        else:
+            logging.info('Выбран id_cash_sell в режиме CHOICE_CASH')
             self._work_choice_amount_second()  # далее выполнить
 
     def _work_choice_amount_second(self):
@@ -143,7 +168,7 @@ class ScriptCoinTransfer:
         if not self._choice_amount_buy:
             self._choice_amount_buy = ChoiceFloat(self._connect_telebot,
                                                   question_main='Введите какой объем получен:',
-                                                  max_number=self._choice_cash_sell.result.max_number)
+                                                  max_number=self._choice_cash_sell.result_first_item.amount)
         working: bool = self._choice_amount_buy.work()
         if working:
             self._next_function.set(self._work_choice_amount_second)  # еще не выбрано, повторить
@@ -180,10 +205,10 @@ class ScriptCoinTransfer:
         task_rule = TaskRule(self._connect_telebot.id_user, CommandsWork.COMMAND_COIN_TRANSFER)
         task_rule.date_time = self._check_date_time.result
         task_rule.id_safe_user = self._choice_safe_buy.result.id_safe  # перевести
-        task_rule.coin = self._choice_cash_sell.result.coin
-        task_rule.id_cash = self._choice_cash_sell.result.id_cash
-        task_rule.price_avr = self._choice_cash_sell.result.price_buy
-        task_rule.coin_avr = self._choice_cash_sell.result.coin_avr
+        task_rule.coin = self._choice_cash_sell.result_first_item.coin
+        task_rule.id_cash = self._choice_cash_sell.result_first_item.id_cash
+        task_rule.price_avr = self._choice_cash_sell.result_first_item.price_buy
+        task_rule.coin_avr = self._choice_cash_sell.result_first_item.coin_avr
         task_rule.amount_sell = self._choice_amount_sell.result
         task_rule.amount = self._choice_amount_buy.result
         task_rule.fee = self._fee

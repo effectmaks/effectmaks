@@ -73,8 +73,7 @@ class ScriptBankOutput:
         """
         if not self._choice_cash:
             self._choice_cash = ChoiceCash(self._connect_telebot, self._choice_safe.result.id_safe,
-                                           message='Выберите счет вывода:',
-                                           mode_work=ModesChoiceCash.ONE)
+                                           message='Выберите счет вывода:')
         working: bool = self._choice_cash.work()
         if working:
             self._next_function.set(self._work_choice_cash)  # еще не выбрано, повторить
@@ -89,7 +88,7 @@ class ScriptBankOutput:
         if not self._choice_amount_first:
             self._choice_amount_first = ChoiceFloat(self._connect_telebot,
                                                     question_main='Введите сколько было выведено:',
-                                                    max_number=self._choice_cash.result.max_number)
+                                                    max_number=self._choice_cash.result_first_item.amount)
         working: bool = self._choice_amount_first.work()
         if working:
             self._next_function.set(self._work_choice_amount_first)  # еще не выбрано, повторить
@@ -104,7 +103,7 @@ class ScriptBankOutput:
         if not self._choice_amount_second:
             self._choice_amount_second = ChoiceFloat(self._connect_telebot,
                                                      question_main='Введите какой объем получен:',
-                                                     max_number=self._choice_cash.result.max_number)
+                                                     max_number=self._choice_cash.result_first_item.amount)
         working: bool = self._choice_amount_second.work()
         if working:
             self._next_function.set(self._work_choice_amount_second)  # еще не выбрано, повторить
@@ -140,7 +139,7 @@ class ScriptBankOutput:
         """
         task_rule = TaskRule(self._connect_telebot.id_user, CommandsWork.COMMAND_OUTPUT)
         task_rule.date_time = self._check_date_time.result
-        task_rule.id_cash = self._choice_cash.result.id_cash
+        task_rule.id_cash = self._choice_cash.result_first_item.id_cash
         task_rule.id_safe_user = self._choice_safe.result.id_safe
         task_rule.amount = self._choice_amount_first.result
         task_rule.fee = self._fee
