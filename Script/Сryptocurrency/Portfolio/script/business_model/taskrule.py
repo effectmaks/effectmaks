@@ -1,12 +1,14 @@
 import logging
 from datetime import datetime
 from decimal import Decimal
+from typing import List
 
 from base.models.cash import ModelCash
 from base.models.cashsell import ModelCashSell
 from base.models.eventbank import ModelEventBank
 from base.models.task import ModelTask, TaskStatus
 from business_model.choice.choicePriceAvr import TypeConvertatuion
+from business_model.choice.choicecash import ChoiceCashResult
 from telegram_bot.api.commandsWork import CommandsWork
 
 
@@ -20,6 +22,7 @@ class TaskRule:
     """
     Выполняет задание на заполнение базы данными
     """
+
     def __init__(self, id_user: int, command_type: str):
         logging.info(f'Создание задания. Тип: {command_type}')
         self._command_type: str = command_type
@@ -37,7 +40,7 @@ class TaskRule:
         self.fee: Decimal = None
         self.coin_avr: str = ""
         self._id_task: int = 0
-
+        self.list_cash: List[ChoiceCashResult] = []
         self.comment: str = ""
 
     def run(self):
@@ -93,7 +96,8 @@ class TaskRule:
                    f"comment:{self.comment}"
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
                                              status=TaskStatus.RUN)
-            id_cash_sell = ModelCashSell.add(date_time=self.date_time, id_cash=self.id_cash, amount_sell=self.amount_sell,
+            id_cash_sell = ModelCashSell.add(date_time=self.date_time, id_cash=self.id_cash,
+                                             amount_sell=self.amount_sell,
                                              id_task=self._id_task, price_sell=self._get_price_sell())
             id_cash_buy = ModelCash.add(id_safe_user=self.id_safe_user, date_time=self.date_time, coin=self.coin,
                                         amount_buy=self.amount, price_buy=self._get_price_buy(), id_task=self._id_task,
@@ -115,13 +119,20 @@ class TaskRule:
                    f"price_avr:{self.price_avr}, coin_avr:{self.coin_avr}"
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
                                              status=TaskStatus.RUN)
-            id_cash_sell = ModelCashSell.add(date_time=self.date_time, id_cash=self.id_cash,
-                                             amount_sell=self.amount_sell, id_task=self._id_task, price_sell=0)
-            id_cash_buy = ModelCash.add(id_safe_user=self.id_safe_user, date_time=self.date_time, coin=self.coin,
+            list_cash_sell: List[int] = []
+            for item in self.list_cash:
+                id_cash = ModelCashSell.add(date_time=self.date_time, id_cash=item.id_cash,
+                                            amount_sell=item.amount, id_task=self._id_task, price_sell=0)
+                list_cash_sell.append(id_cash)
+            coin_buy = self.list_cash[0].coin  # в любом случае монеты будут одинаковы, и 0 ячейка будет занята
+            id_cash_buy = ModelCash.add(id_safe_user=self.id_safe_user, date_time=self.date_time,
+                                        coin=coin_buy,
                                         amount_buy=self.amount, price_buy=self.price_avr, id_task=self._id_task,
                                         coin_avr=self.coin_avr)
-            ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=datetime.now(),
-                               id_cash_buy=id_cash_buy, id_cash_sell=id_cash_sell, fee=self.fee, comment=self.comment)
+            for id_cash_sell in list_cash_sell:
+                ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=datetime.now(),
+                                   id_cash_buy=id_cash_buy, id_cash_sell=id_cash_sell, fee=self.fee,
+                                   comment=self.comment)
             ModelTask.set_completed_status(self._id_task)
             logging.info(f'Задание {CommandsWork.COMMAND_COIN_TRANSFER} выполнено')
         except Exception as err:
@@ -175,31 +186,3 @@ class TaskRule:
             logging.info(f'ID задание:{id_task_delete} успешно удалено.')
         except Exception as err:
             logging.error(f'Не удалось удалить все записи с ID_task: {id_task_delete} -  {str(err)}')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

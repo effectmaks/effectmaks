@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from decimal import Decimal
 
 from peewee import DateTimeField, IntegerField, DoubleField, Model
 from base.sqlite.connectSqlite import ConnectSqlite, ExceptionInsert, ExceptionSelect, ExceptionDelete
@@ -25,7 +26,7 @@ class ModelCashSell:
     __name_model = 'cashsell'
 
     @classmethod
-    def add(cls, id_task: int, date_time: datetime, id_cash: int, amount_sell: float, price_sell: float = 0) -> int:
+    def add(cls, id_task: int, date_time: datetime, id_cash: int, amount_sell: Decimal, price_sell: float = 0) -> int:
         """
         Снятие/конвертирование со счета монеты(средства).
         Исключения: конвертации даты, добавления записи.

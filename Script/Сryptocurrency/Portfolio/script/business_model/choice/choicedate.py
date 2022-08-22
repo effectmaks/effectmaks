@@ -28,6 +28,9 @@ class ChoiceDate:
         date_time = cls._variant_3(date_time_str)
         if date_time:
             return date_time
+        date_time = cls._variant_4(date_time_str)
+        if date_time:
+            return date_time
 
         date_time_str = cls._replace_symbol(date_time_str)
         date_time = cls._variant_1(date_time_str)
@@ -43,7 +46,7 @@ class ChoiceDate:
     @classmethod
     def _variant_1(cls, date_time_str: str) -> datetime:
         """
-        Конвертация используя шаблон '%d.%m.%y %H.%M.%S'
+        Конвертация используя шаблон
         :param date_time_str: Дата строковая
         :return: Новая дата
         """
@@ -56,7 +59,7 @@ class ChoiceDate:
     @classmethod
     def _variant_2(cls, date_time_str: str) -> datetime:
         """
-       Конвертация используя шаблон '%d.%m.%Y %H.%M.%S'
+       Конвертация используя шаблон
        :param date_time_str: Дата и время строковая
        :return: Новая дата и время
        """
@@ -69,12 +72,25 @@ class ChoiceDate:
     @classmethod
     def _variant_3(cls, date_time_str: str) -> datetime:
         """
-       Конвертация используя шаблон '%d.%m.%Y %H.%M.%S'
+       Конвертация используя шаблон
        :param date_time_str: Дата и время строковая
        :return: Новая дата и время
        """
         try:
             template: str = '%d.%m.%Y, %H:%M:%S'
+            return datetime.strptime(date_time_str, template)
+        except Exception:
+            logging.info(f'cls:{cls.__name__} def:{cls._variant_3.__name__} Ошибка конвертации по шаблону "{template}"')
+
+    @classmethod
+    def _variant_4(cls, date_time_str: str) -> datetime:
+        """
+       Конвертация используя шаблон
+       :param date_time_str: Дата и время строковая
+       :return: Новая дата и время
+       """
+        try:
+            template: str = '%Y-%m-%d %H:%M:%S'
             return datetime.strptime(date_time_str, template)
         except Exception:
             logging.info(f'cls:{cls.__name__} def:{cls._variant_3.__name__} Ошибка конвертации по шаблону "{template}"')

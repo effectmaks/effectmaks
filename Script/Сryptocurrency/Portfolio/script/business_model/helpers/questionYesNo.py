@@ -3,7 +3,7 @@ from business_model.helpers.nextfunction import NextFunction
 
 
 class QuestionYesNo:
-    def __init__(self, connect_telebot: ConnectTelebot, text_err: str):
+    def __init__(self, connect_telebot: ConnectTelebot, text_err: str, question: str = "Желаете повторить?"):
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(QuestionYesNo.__name__)
         self._next_function.set(self._set_question)
@@ -13,12 +13,13 @@ class QuestionYesNo:
         self._choice: bool = False
         self._result: bool = False
         self._text_err: str = text_err
+        self._question = question
 
     def _set_question(self):
         """
         Сформировать вопрос
         """
-        self._connect_telebot.view_keyboard_yes_no(f'{self._text_err}\nЖелаете повторить?',
+        self._connect_telebot.view_keyboard_yes_no(f'{self._text_err}\n{self._question}',
                                                    self._YES, self._NO)
         self._next_function.set(self._answer)
 

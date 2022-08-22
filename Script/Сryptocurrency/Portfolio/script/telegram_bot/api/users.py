@@ -28,21 +28,22 @@ class Users:
         :param bot_telegram:
         :return:
         """
-        logging.info('>>>||')
-        user = cls.dict_users.get(id_user, None)
+        logging.info('>||')
+        user = cls.dict_users.get(id_user)
         if user:
             logging.info(f'Новое сообщение id_user:{id_user}')
         else:
             logging.info(f'Новый user_id:{id_user}')
-            TaskRule.check_delete(id_user)  # Проверяет базу на наличие запущенных заданий
+            TaskRule.check_delete(id_user)  # Проверяет базу на наличие запущенных заданий и удаляет их
             user = Users(bot_telegram, id_user)
             cls.dict_users[id_user] = user
         try:
+            logging.info('||>>>||')
             user.control_bot.new_message(message_str)
         except Exception as ex:
             logging.error(f'Серьезная ошибка в обработке данных {str(ex)}')
             cls.dict_users.pop(id_user, None)
-        logging.info('||>>>')
+        logging.info('||>')
 
     @classmethod
     def button_info(cls, bot_telegram: TeleBot, call):

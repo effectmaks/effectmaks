@@ -35,7 +35,7 @@ class QuestionAmount:
         Сформировать вопрос Что делать с объемом?
         """
         logging.info('Режим вопрос Что делать с объемом?')
-        self._connect_telebot.view_keyboard(f'{self._text_err}\nВыберите действие:',
+        self._connect_telebot.view_keyboard(f'{self._text_err} Выберите действие:',
                                             dict_view=self._dict_options,
                                             type_message=MessageType.KEY)
         self._next_function.set(self._answer)

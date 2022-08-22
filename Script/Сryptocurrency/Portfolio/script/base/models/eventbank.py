@@ -1,8 +1,8 @@
 import logging
 from datetime import datetime
+from decimal import Decimal
 
 from peewee import DateTimeField, IntegerField, DoubleField, TextField, Model
-
 from base.sqlite.connectSqlite import ConnectSqlite, ExceptionInsert, ExceptionSelect, ExceptionDelete
 
 
@@ -29,7 +29,7 @@ class ModelEventBank:
 
     @classmethod
     def add(cls, id_task: int, type: str, date_time: datetime = None, id_cash_buy: int = 0,
-            id_cash_sell: int = 0, fee: float = '', comment: str = '') -> int:
+            id_cash_sell: int = 0, fee: Decimal = None, comment: str = '') -> int:
         """
         Добавление события банка. Конвертация, ввод и вывод из системы.
         Исключения: конвертации даты, добавления записи.

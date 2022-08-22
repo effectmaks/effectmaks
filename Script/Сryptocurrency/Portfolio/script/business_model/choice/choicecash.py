@@ -2,6 +2,7 @@ import logging
 from typing import Dict, List
 from enum import Enum
 from decimal import Decimal
+from datetime import datetime
 
 from base.models.cash import ModelCash, CashItem
 from business_model.helpers.nextfunction import NextFunction
@@ -39,7 +40,8 @@ class ChoiceCash:
                  id_safe_user: int,
                  message: str,
                  filter_coin_view_no: str = '',
-                 filter_coin_view: str = ''):
+                 filter_coin_view: str = '',
+                 filter_cash_date_before: datetime = None):
         logging.info(f'Создание объекта {ChoiceCash.__name__}')
         self._connect_telebot = connect_telebot
         self._mode_work = ModesChoiceCash.ONE
@@ -50,6 +52,7 @@ class ChoiceCash:
         self._id_safe_user = id_safe_user
         self._filter_coin_view_no = filter_coin_view_no  # не показывать монету в сейфе
         self._filter_coin_view = filter_coin_view  # показывать только эту монету в сейфе
+        self._filter_cash_date_before = filter_cash_date_before  # показывать только до этой даты
         self._set_next_function()
         self._work: bool = True  # Когда все сделано закончить работу. Сейчас выбор cash в работе
         self._amount_sell = Decimal(0)
@@ -74,7 +77,8 @@ class ChoiceCash:
         self._dict_cash: Dict[int, CashItem] = ModelCash.dict_amount(id_safe_user=self._id_safe_user,
                                                                      filter_coin_view_no=self._filter_coin_view_no,
                                                                      filter_coin_view=self._filter_coin_view,
-                                                                     list_cash_no_view=self._list_cash_no_view)
+                                                                     list_cash_no_view=self._list_cash_no_view,
+                                                                     filter_cash_date_before=self._filter_cash_date_before)
         if not self._dict_cash:
             self._connect_telebot.send_text('В сейфе нет счетов для продажи.')
             raise ExceptionChoiceCash('В сейфе нет счетов для продажи.')
@@ -160,6 +164,8 @@ class ChoiceCash:
         result_left = self._calc_amount_sell_left()
         if result_left > 0:
             logging.info(f'Требуется {self._amount_sell} осталось {result_left}.')
+            self._message_str = f'Требуется {self._amount_sell} осталось {result_left}.\n' \
+                                f'Выберите счет снятия:'
             self._question_choice_cash()
             return
         logging.info('Счетов достаточно')
@@ -194,6 +200,14 @@ class ChoiceCash:
         if self._list_result:
             return self._list_result
 
+    @property
+    def amount_sell(self) -> Decimal:
+        return self._amount_sell
+
+    @amount_sell.setter
+    def amount_sell(self, amount_sell: Decimal):
+        self._amount_sell = amount_sell
+
     def work(self) -> bool:
         """
         Проверка режим выбора cash в работе
@@ -205,13 +219,13 @@ class ChoiceCash:
     def set_type_amount_list(self, amount_sell: Decimal):
         """
         Установить режим поиска дополнительных счетов
+        amount_sell: Decimal Объем который надо продать или вывести
         :return:
         """
         logging.info('Установка режима ModesChoiceCash.LIST')
+        self._work = True
         self._mode_work = ModesChoiceCash.LIST
         self._amount_sell = amount_sell
-        id_cash_no_view = self.result_first_item.id_cash
-        self._list_cash_no_view.append(id_cash_no_view)
         self._set_next_function()
 
 
