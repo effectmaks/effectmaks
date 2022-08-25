@@ -62,14 +62,14 @@ class ChoiceFloat:
                 if self._type_work == TypesChoiceFloat.AMOUNT:
                     self._question_extra(f'Число должно быть от 0 до {self._max_number}. Повторить ввод?')
                 else:
-                    self._result_float = result_float
+                    self._result_float = result_float.quantize(Decimal('0.00000001'))
                     self._set_question_amount()
         else:
             logging.info('Невозможно преобразовать число.')
             self._question_extra("Ошибка преобразования числа. Повторить ввод?")
 
     def _work_end(self, result_float: Decimal):
-        self._result_float = result_float
+        self._result_float = result_float.quantize(Decimal('0.00000001'))
         logging.info(f'Выбрано число - {self._result_float}')
         self._work = False
 

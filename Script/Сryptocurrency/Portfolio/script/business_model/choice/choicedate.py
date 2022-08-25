@@ -4,7 +4,6 @@ from telegram_bot.api.telegramApi import ConnectTelebot
 from business_model.helpers.nextfunction import NextFunction
 from business_model.helpers.questionYesNo import QuestionYesNo
 
-
 class ExceptionChoiceDate(Exception):
     def __init__(self, err_message: str = ''):
         logging.error(f'Класс {ExceptionChoiceDate.__name__} - {err_message}')

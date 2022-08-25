@@ -26,7 +26,7 @@ class ModelCashSell:
     __name_model = 'cashsell'
 
     @classmethod
-    def add(cls, id_task: int, date_time: datetime, id_cash: int, amount_sell: Decimal, price_sell: float = 0) -> int:
+    def add(cls, id_task: int, date_time: datetime, id_cash: int, amount_sell: Decimal, price_sell: Decimal = None) -> int:
         """
         Снятие/конвертирование со счета монеты(средства).
         Исключения: конвертации даты, добавления записи.

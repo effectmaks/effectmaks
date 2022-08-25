@@ -34,7 +34,7 @@ class TaskRule:
         self.id_cash: int = 0
         self.coin: str = ""
         self.amount: Decimal = None
-        self.amount_sell: Decimal = 0
+        self.amount_sell: Decimal = Decimal(0)
         self.price_avr: Decimal = None
         self.type_convertation: TypeConvertatuion = TypeConvertatuion.NONE
         self.fee: Decimal = None
@@ -96,14 +96,19 @@ class TaskRule:
                    f"comment:{self.comment}"
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
                                              status=TaskStatus.RUN)
-            id_cash_sell = ModelCashSell.add(date_time=self.date_time, id_cash=self.id_cash,
-                                             amount_sell=self.amount_sell,
-                                             id_task=self._id_task, price_sell=self._get_price_sell())
+            list_cash_sell: List[int] = []
+            for item in self.list_cash:
+                id_cash = ModelCashSell.add(date_time=self.date_time, id_cash=item.id_cash,
+                                            amount_sell=item.amount, id_task=self._id_task,
+                                            price_sell=self._get_price_sell())
+                list_cash_sell.append(id_cash)
             id_cash_buy = ModelCash.add(id_safe_user=self.id_safe_user, date_time=self.date_time, coin=self.coin,
                                         amount_buy=self.amount, price_buy=self._get_price_buy(), id_task=self._id_task,
                                         coin_avr=self.coin_avr)
-            ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=datetime.now(),
-                               id_cash_buy=id_cash_buy, id_cash_sell=id_cash_sell, fee=self.fee, comment=self.comment)
+            for id_cash_sell in list_cash_sell:
+                ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=datetime.now(),
+                                   id_cash_buy=id_cash_buy, id_cash_sell=id_cash_sell, fee=self.fee,
+                                   comment=self.comment)
             ModelTask.set_completed_status(self._id_task)
             logging.info(f'Задание {CommandsWork.COMMAND_CONVERTATION} выполнено')
         except Exception as err:
@@ -122,7 +127,7 @@ class TaskRule:
             list_cash_sell: List[int] = []
             for item in self.list_cash:
                 id_cash = ModelCashSell.add(date_time=self.date_time, id_cash=item.id_cash,
-                                            amount_sell=item.amount, id_task=self._id_task, price_sell=0)
+                                            amount_sell=item.amount, id_task=self._id_task, price_sell=Decimal(0))
                 list_cash_sell.append(id_cash)
             coin_buy = self.list_cash[0].coin  # в любом случае монеты будут одинаковы, и 0 ячейка будет занята
             id_cash_buy = ModelCash.add(id_safe_user=self.id_safe_user, date_time=self.date_time,
@@ -141,17 +146,17 @@ class TaskRule:
                 self._task_delete(id_task_delete=self._id_task)
             raise ExceptionTaskList(f'Ошибка {CommandsWork.COMMAND_COIN_TRANSFER}: {err}')
 
-    def _get_price_sell(self) -> float:
+    def _get_price_sell(self) -> Decimal:
         if self.type_convertation == TypeConvertatuion.SELL:
             return self.price_avr
         else:
-            return 0
+            return Decimal(0)
 
-    def _get_price_buy(self) -> float:
+    def _get_price_buy(self) -> Decimal:
         if self.type_convertation == TypeConvertatuion.BUY:
             return self.price_avr
         else:
-            return 0
+            return Decimal(0)
 
     @classmethod
     def check_delete(cls, id_user: int = 0):

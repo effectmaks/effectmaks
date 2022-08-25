@@ -5,9 +5,10 @@ from business_model.choice.choicePriceAvr import ChoicePriceAvr
 from business_model.choice.choicecash import ChoiceCash, ModesChoiceCash
 from business_model.choice.choicecoin import ChoiceCoin, ModesChoiceCoin
 from business_model.choice.choicedate import ChoiceDate
-from business_model.choice.folderChoiceFloat.choicefloat import ChoiceFloat
+from business_model.choice.folderChoiceFloat.choicefloat import ChoiceFloat, TypesChoiceFloat
 from business_model.choice.choicesafe import ChoiceSafe, ModesChoiceSafe
 from business_model.choice.choicetext import ChoiceText
+from business_model.choice.folderChoiceFloat.questionAmount import TypesAnswerAmount
 from business_model.helpers.nextfunction import NextFunction
 from business_model.helpers.questionYesNo import QuestionYesNo
 from business_model.taskrule import TaskRule
@@ -172,7 +173,8 @@ class ScriptBankConvertation:
             self._choice_cash_sell = ChoiceCash(self._connect_telebot, self._choice_safe.result.id_safe,
                                                 message='Выберите счет продажи:',
                                                 filter_coin_view_no=self._choice_coin_buy.result,
-                                                filter_coin_view=self._choice_coin_sell.result)
+                                                filter_coin_view=self._choice_coin_sell.result,
+                                                filter_cash_date_before=self._check_date_time.result)
         working: bool = self._choice_cash_sell.work()
         if working:
             self._next_function.set(self._work_choice_cash)  # еще не выбрано, повторить
@@ -189,24 +191,55 @@ class ScriptBankConvertation:
             self._choice_amount_sell_before = ChoiceFloat(self._connect_telebot,
                                                           question_main=f'Введите сколько было '
                                                                         f'{self._choice_cash_sell.result_first_item.coin} до '
-                                                                        f'продажи:', max_number=max_number)
+                                                                        f'продажи:',
+                                                          max_number=max_number,
+                                                          type_work=TypesChoiceFloat.CASH)
         working: bool = self._choice_amount_sell_before.work()
         if working:
             self._next_function.set(self._work_choice_amount_sell_before)  # еще не выбрано, повторить
         else:
             logging.info('Выбран _work_choice_amount_sell_before')
+            self._check_work_choice_amount_first()  # далее выполнить
+
+    def _check_work_choice_amount_first(self):
+        """
+        Проверить выбрано число или нужно выбирать дополнительные счета
+        :return:
+        """
+        if self._choice_amount_sell_before.choice_type_amount == TypesAnswerAmount.CHOICE_CASH:
+            logging.info('Нужно выбрать дополнительные счета')
+            self._choice_cash_sell.set_type_amount_list(self._choice_amount_sell_before.result)
+            self._work_choice_cash_sell_list()  # выбрать дополнительные счета
+            self._next_function.set(self._work_choice_cash_sell_list)
+        else:
+            logging.info('Дополнительные счета вводить не требуется')
+            self._work_choice_amount_sell_after()  # далее выполнить
+
+    def _work_choice_cash_sell_list(self):
+        """
+        Выбрать дополнительные счета для продажи в режиме CHOICE_CASH
+        """
+        logging.info('Работа _choice_cash_sell в режиме CHOICE_CASH')
+        working: bool = self._choice_cash_sell.work()
+        if working:
+            self._next_function.set(self._work_choice_cash_sell_list)  # еще не выбрано, повторить
+        else:
+            logging.info('Выбран id_cash_sell в режиме CHOICE_CASH')
+            self._choice_cash_sell.amount_sell = self._choice_amount_sell_before.result
             self._work_choice_amount_sell_after()  # далее выполнить
 
     def _work_choice_amount_sell_after(self):
         """
         Команда сформировать amount sell after
         """
+        logging.info("Команда сформировать amount sell after")
         if not self._choice_amount_sell_after:
-            max_number = self._choice_cash_sell.result_first_item.amount
+            max_number = self._choice_amount_sell_before.result
             self._choice_amount_sell_after = ChoiceFloat(self._connect_telebot,
                                                          question_main=f'Введите объем '
                                                                        f'{self._choice_cash_sell.result_first_item.coin} после '
-                                                                       f'продажи:', max_number=max_number)
+                                                                       f'продажи:',
+                                                         max_number=max_number)
         working: bool = self._choice_amount_sell_after.work()
         if working:
             self._next_function.set(self._work_choice_amount_sell_after)  # еще не выбрано, повторить
@@ -229,6 +262,11 @@ class ScriptBankConvertation:
         self._work_price_avr()  # далее выполнить
 
     def _wait_calc_amount_sell_repeat(self):
+        """
+        Формат повторить ввод объема?
+        :return:
+        """
+        logging.info('Формат повторить ввод объема?')
         b_working = self._question_yes_no.work()
         if b_working:
             self._next_function.set(self._wait_calc_amount_sell_repeat)
@@ -237,7 +275,8 @@ class ScriptBankConvertation:
         if result:
             self._choice_amount_sell_before = None
             self._choice_amount_sell_after = None
-            self._work_choice_amount_sell_before()  # повторить
+            self._choice_coin_sell = None
+            self._work_choice_cash()  # повторить
         else:
             raise ExceptionScriptBankConvertation(f'Юзер вводит неправильные числа.')
 
@@ -281,13 +320,11 @@ class ScriptBankConvertation:
         task_rule.date_time = self._check_date_time.result
         task_rule.coin = self._choice_coin_buy.result
         task_rule.amount = self._amount_buy
-
-        task_rule.id_cash = self._choice_cash_sell.result_first_item.id_cash  # Откуда снимать
-        task_rule.amount_sell = self._amount_sell
-        task_rule.id_safe_user = self._choice_safe.result.id_safe
         task_rule.price_avr = self._choice_price_avr.result.price_avr
+        task_rule.list_cash = self._choice_cash_sell.list_result
+
+        task_rule.id_safe_user = self._choice_safe.result.id_safe
         task_rule.type_convertation = self._choice_price_avr.result.type_convertation
-        task_rule.coin_avr = self._choice_cash_sell.result_first_item.coin
         task_rule.comment = self._choice_comment.result
         task_rule.run()
         self._connect_telebot.send_text('Команда выполнена.')
