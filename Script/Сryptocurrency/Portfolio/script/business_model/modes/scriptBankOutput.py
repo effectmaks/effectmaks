@@ -74,7 +74,8 @@ class ScriptBankOutput:
         """
         if not self._choice_cash:
             self._choice_cash = ChoiceCash(self._connect_telebot, self._choice_safe.result.id_safe,
-                                           message='Выберите счет вывода:')
+                                           message='Выберите счет вывода:',
+                                           filter_cash_date_before=self._check_date_time.result)
         working: bool = self._choice_cash.work()
         if working:
             self._next_function.set(self._work_choice_cash)  # еще не выбрано, повторить
@@ -110,6 +111,8 @@ class ScriptBankOutput:
             self._next_function.set(self._work_choice_cash_sell_list)
         else:
             logging.info('Дополнительные счета вводить не требуется')
+            # установить сколько надо перевести средств со счета
+            self._choice_cash.result_first_item.amount = self._choice_amount_first.result
             self._work_choice_amount_second()  # далее выполнить
 
     def _work_choice_cash_sell_list(self):

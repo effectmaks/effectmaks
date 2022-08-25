@@ -74,6 +74,7 @@ class ConnectTelebot:
         :param text_keyboard: Вопрос для пользователя
         """
         try:
+            print('ConnectTelebot.view_keyboard_in')
             if list_view:
                 logging.info(f'Показать клавиатуру {text_keyboard}-{list_view}')
             else:
@@ -90,6 +91,7 @@ class ConnectTelebot:
                     keyboard_item = types.InlineKeyboardButton(text=value, callback_data=key)
                     keyboard.add(keyboard_item)  # добавляем кнопку
             self._telebot.send_message(self._id_user, text=text_keyboard, reply_markup=keyboard)
+            print('ConnectTelebot.view_keyboard_out')
         except Exception as err:
             raise ExceptionConnectTelebot(f'Ошибка создания клавиатуры - {self.view_keyboard.__name__}')
 

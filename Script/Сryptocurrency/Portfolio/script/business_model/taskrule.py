@@ -99,7 +99,7 @@ class TaskRule:
     def _run_command_bank_convertation(self):
         try:
             desc = f"Конвертировать date_time:{self.date_time},  купить coin:{self.coin}, " \
-                   f"amount:{self.amount}, продать id_cash:{self.id_cash}, amount_sell:{self.amount_sell}, " \
+                   f"amount:{self.amount}, amount_sell:{self.amount_sell}, " \
                    f"comment:{self.comment}"
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
                                              status=TaskStatus.RUN)

@@ -213,6 +213,8 @@ class ScriptBankConvertation:
             self._next_function.set(self._work_choice_cash_sell_list)
         else:
             logging.info('Дополнительные счета вводить не требуется')
+            # установить сколько надо перевести средств со счета
+            self._choice_cash_sell.result_first_item.amount = self._choice_amount_sell_before.result
             self._work_choice_amount_sell_after()  # далее выполнить
 
     def _work_choice_cash_sell_list(self):
