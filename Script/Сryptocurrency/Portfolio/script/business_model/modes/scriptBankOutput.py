@@ -1,8 +1,9 @@
 import logging
 
 from business_model.choice.choicecash import ChoiceCash, ModesChoiceCash
-from business_model.choice.folderChoiceFloat.choicefloat import ChoiceFloat
+from business_model.choice.folderChoiceFloat.choicefloat import ChoiceFloat, TypesChoiceFloat
 from business_model.choice.choicetext import ChoiceText
+from business_model.choice.folderChoiceFloat.questionAmount import TypesAnswerAmount
 from business_model.helpers.nextfunction import NextFunction
 from telegram_bot.api.commandsWork import CommandsWork
 from telegram_bot.api.telegramApi import ConnectTelebot
@@ -88,12 +89,40 @@ class ScriptBankOutput:
         if not self._choice_amount_first:
             self._choice_amount_first = ChoiceFloat(self._connect_telebot,
                                                     question_main='Введите сколько было выведено:',
-                                                    max_number=self._choice_cash.result_first_item.amount)
+                                                    max_number=self._choice_cash.result_first_item.amount,
+                                                    type_work=TypesChoiceFloat.CASH)
         working: bool = self._choice_amount_first.work()
         if working:
             self._next_function.set(self._work_choice_amount_first)  # еще не выбрано, повторить
         else:
             logging.info('Выбран _choice_amount_sell')
+            self._check_work_choice_amount_first()  # далее выполнить
+
+    def _check_work_choice_amount_first(self):
+        """
+        Проверить выбрано число или нужно выбирать дополнительные счета
+        :return:
+        """
+        if self._choice_amount_first.choice_type_amount == TypesAnswerAmount.CHOICE_CASH:
+            logging.info('Нужно выбрать дополнительные счета')
+            self._choice_cash.set_type_amount_list(self._choice_amount_first.result)
+            self._work_choice_cash_sell_list()  # выбрать дополнительные счета
+            self._next_function.set(self._work_choice_cash_sell_list)
+        else:
+            logging.info('Дополнительные счета вводить не требуется')
+            self._work_choice_amount_second()  # далее выполнить
+
+    def _work_choice_cash_sell_list(self):
+        """
+        Выбрать дополнительные счета для продажи в режиме CHOICE_CASH
+        """
+        logging.info('Работа _choice_cash_sell в режиме CHOICE_CASH')
+        working: bool = self._choice_cash.work()
+        if working:
+            self._next_function.set(self._work_choice_cash_sell_list)  # еще не выбрано, повторить
+        else:
+            logging.info('Выбран id_cash_sell в режиме CHOICE_CASH')
+            self._choice_cash.amount_sell = self._choice_amount_first.result
             self._work_choice_amount_second()  # далее выполнить
 
     def _work_choice_amount_second(self):
@@ -103,7 +132,7 @@ class ScriptBankOutput:
         if not self._choice_amount_second:
             self._choice_amount_second = ChoiceFloat(self._connect_telebot,
                                                      question_main='Введите какой объем получен:',
-                                                     max_number=self._choice_cash.result_first_item.amount)
+                                                     max_number=self._choice_amount_first.result)
         working: bool = self._choice_amount_second.work()
         if working:
             self._next_function.set(self._work_choice_amount_second)  # еще не выбрано, повторить
@@ -139,9 +168,8 @@ class ScriptBankOutput:
         """
         task_rule = TaskRule(self._connect_telebot.id_user, CommandsWork.COMMAND_OUTPUT)
         task_rule.date_time = self._check_date_time.result
-        task_rule.id_cash = self._choice_cash.result_first_item.id_cash
         task_rule.id_safe_user = self._choice_safe.result.id_safe
-        task_rule.amount = self._choice_amount_first.result
+        task_rule.list_cash = self._choice_cash.list_result
         task_rule.fee = self._fee
         task_rule.comment = self._choice_comment.result
         task_rule.run()

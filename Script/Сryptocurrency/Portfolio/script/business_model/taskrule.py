@@ -78,10 +78,17 @@ class TaskRule:
                    f"id_safe_user:{self.id_safe_user}, amount:{self.amount}, fee:{self.fee}, comment:{self.comment}"
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
                                              status=TaskStatus.RUN)
-            id_cash_sell = ModelCashSell.add(date_time=self.date_time, id_cash=self.id_cash, amount_sell=self.amount,
-                                             id_task=self._id_task)
-            ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=datetime.now(),
-                               id_cash_sell=id_cash_sell, fee=self.fee, comment=self.comment)
+            list_cash_sell: List[int] = []
+            for item in self.list_cash:
+                id_cash = ModelCashSell.add(date_time=self.date_time, id_cash=item.id_cash,
+                                            amount_sell=item.amount, id_task=self._id_task)
+                list_cash_sell.append(id_cash)
+
+            for id_cash_sell in list_cash_sell:
+                ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=datetime.now(),
+                                   id_cash_sell=id_cash_sell, fee=self.fee,
+                                   comment=self.comment)
+
             ModelTask.set_completed_status(self._id_task)
             logging.info(f'Задание {CommandsWork.COMMAND_OUTPUT} выполнено')
         except Exception as err:
