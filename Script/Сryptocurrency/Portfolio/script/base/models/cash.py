@@ -119,6 +119,8 @@ class ModelCash:
             command_delete = Cash.delete().where(Cash.id_task == id_task)
             count = command_delete.execute()
             logging.info(f'Удалены записи в кол-ве - {count} шт.')
+            if count == 0:
+                raise ExceptionDelete(cls.__name_model, "Не получилось удалить записи")
         except Exception as err:
             raise ExceptionDelete(cls.__name_model, str(err))
 
@@ -188,22 +190,6 @@ class ModelCash:
         try:
             dict_out = {}
             connect = ConnectSqlite.get_connect()
-            print('select id, coin, amount, price_buy, coin_avr, date_time '
-                                            'from (select cash.id, cash.coin, (cash.amount_buy - '
-                                            'CASE WHEN sum_cash_sell.amount IS NULL '
-                                            'THEN 0 else sum_cash_sell.amount end) as amount, '
-                                            'cash.price_buy, cash.coin_avr,cash.date_time '
-                                            'from cash '
-                                            'left join (select id_cash, sum(amount_sell) as amount '
-                                            'from cashsell group by id_cash) as sum_cash_sell '
-                                            'on cash.id = sum_cash_sell.id_cash '
-                                            'where cash.id_safe_user = {} {} {} {} {}) '
-                                            'as filter_zero where amount <> 0 order by 6,2,4,3'.
-                                            format(id_safe_user,
-                                                   sql_coin_no_view,
-                                                   sql_coin_view,
-                                                   sql_cash_no_view,
-                                                   sql_cash_date_before))
             cash_list = connect.execute_sql('select id, coin, amount, price_buy, coin_avr, date_time '
                                             'from (select cash.id, cash.coin, (cash.amount_buy - '
                                             'CASE WHEN sum_cash_sell.amount IS NULL '

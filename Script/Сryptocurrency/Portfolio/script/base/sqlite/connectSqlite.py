@@ -50,7 +50,7 @@ class ConnectSqlite:
     def get_connect(cls):
         if not cls.__connect:
             try:
-                cls.__connect = SqliteDatabase('base/sqlite/db.sqlite3')
+                cls.__connect = SqliteDatabase('base/sqlite/db_debug.sqlite3')
             except Exception as err:
                 raise ExceptionBase(f'Ошибка подключения БД: {str(err)}')
         return cls.__connect

@@ -94,5 +94,7 @@ class ModelCashSell:
             command_delete = CashSell.delete().where(CashSell.id_task == id_task)
             count = command_delete.execute()
             logging.info(f'Удалены записи в кол-ве - {count} шт.')
+            if count == 0:
+                raise ExceptionDelete(cls.__name_model, "Не получилось удалить записи")
         except Exception as err:
             raise ExceptionDelete(cls.__name_model, str(err))

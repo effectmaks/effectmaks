@@ -60,10 +60,10 @@ class TaskRule:
                    f"id_safe_user:{self.id_safe_user}, coin:{self.coin}, amount:{self.amount}, fee:{self.fee}, " \
                    f"comment:{self.comment}"
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
-                                             status=TaskStatus.RUN)
+                                             status=TaskStatus.RUN, date_time=self.date_time)
             id_cash_buy = ModelCash.add(id_safe_user=self.id_safe_user, date_time=self.date_time, coin=self.coin,
                                         amount_buy=self.amount, id_task=self._id_task)
-            ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=datetime.now(),
+            ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=self.date_time,
                                id_cash_buy=id_cash_buy, fee=self.fee, comment=self.comment)
             ModelTask.set_completed_status(self._id_task)
             logging.info(f'Задание {CommandsWork.COMMAND_INPUT} выполнено')
@@ -77,7 +77,7 @@ class TaskRule:
             desc = f"Снять cash date_time:{self.date_time},  id_cash:{self.id_cash}, " \
                    f"id_safe_user:{self.id_safe_user}, amount:{self.amount}, fee:{self.fee}, comment:{self.comment}"
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
-                                             status=TaskStatus.RUN)
+                                             status=TaskStatus.RUN, date_time=self.date_time)
             list_cash_sell: List[int] = []
             for item in self.list_cash:
                 id_cash = ModelCashSell.add(date_time=self.date_time, id_cash=item.id_cash,
@@ -85,7 +85,7 @@ class TaskRule:
                 list_cash_sell.append(id_cash)
 
             for id_cash_sell in list_cash_sell:
-                ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=datetime.now(),
+                ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=self.date_time,
                                    id_cash_sell=id_cash_sell, fee=self.fee,
                                    comment=self.comment)
 
@@ -102,7 +102,7 @@ class TaskRule:
                    f"amount:{self.amount}, amount_sell:{self.amount_sell}, " \
                    f"comment:{self.comment}"
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
-                                             status=TaskStatus.RUN)
+                                             status=TaskStatus.RUN, date_time=self.date_time)
             list_cash_sell: List[int] = []
             for item in self.list_cash:
                 id_cash = ModelCashSell.add(date_time=self.date_time, id_cash=item.id_cash,
@@ -113,7 +113,7 @@ class TaskRule:
                                         amount_buy=self.amount, price_buy=self._get_price_buy(), id_task=self._id_task,
                                         coin_avr=self.coin_avr)
             for id_cash_sell in list_cash_sell:
-                ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=datetime.now(),
+                ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=self.date_time,
                                    id_cash_buy=id_cash_buy, id_cash_sell=id_cash_sell, fee=self.fee,
                                    comment=self.comment)
             ModelTask.set_completed_status(self._id_task)
@@ -130,7 +130,7 @@ class TaskRule:
                    f"пополнить amount:{self.amount}, fee:{self.fee}, comment:{self.comment}, " \
                    f"price_avr:{self.price_avr}, coin_avr:{self.coin_avr}"
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
-                                             status=TaskStatus.RUN)
+                                             status=TaskStatus.RUN, date_time=self.date_time)
             list_cash_sell: List[int] = []
             for item in self.list_cash:
                 id_cash = ModelCashSell.add(date_time=self.date_time, id_cash=item.id_cash,
@@ -142,7 +142,7 @@ class TaskRule:
                                         amount_buy=self.amount, price_buy=self.price_avr, id_task=self._id_task,
                                         coin_avr=self.coin_avr)
             for id_cash_sell in list_cash_sell:
-                ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=datetime.now(),
+                ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=self.date_time,
                                    id_cash_buy=id_cash_buy, id_cash_sell=id_cash_sell, fee=self.fee,
                                    comment=self.comment)
             ModelTask.set_completed_status(self._id_task)
@@ -191,10 +191,21 @@ class TaskRule:
         try:
             logging.info(f'!!!')
             logging.info(f'Удалить все записи задания ID:{id_task_delete}')
-            ModelCash.delete_task_run(id_task=id_task_delete)
             ModelCashSell.delete_task_run(id_task=id_task_delete)
+            ModelCash.delete_task_run(id_task=id_task_delete)
             ModelEventBank.delete_task_run(id_task=id_task_delete)
             ModelTask.set_delete_status(id_task_delete)
             logging.info(f'ID задание:{id_task_delete} успешно удалено.')
         except Exception as err:
             logging.error(f'Не удалось удалить все записи с ID_task: {id_task_delete} -  {str(err)}')
+
+    @classmethod
+    def delete_task(cls, id_task_delete: int = 0):
+        """
+        Команда юзера удалить задание
+        :param id_task_delete:
+        :return:
+        """
+        logging.info(f'Команда юзера - Удалить задание ID:{id_task_delete}')
+        ModelTask.set_run_status(id_task_delete)
+        cls._task_delete(id_task_delete)
