@@ -5,7 +5,7 @@ from business_model.choice.folderChoiceFloat.choicefloat import ChoiceFloat, Typ
 from business_model.choice.choicetext import ChoiceText
 from business_model.choice.folderChoiceFloat.questionAmount import TypesAnswerAmount
 from business_model.helpers.nextfunction import NextFunction
-from telegram_bot.api.commandsWork import CommandsWork
+from telegram_bot.api.commandsWork import CommandsWork, TypeWork
 from telegram_bot.api.telegramApi import ConnectTelebot
 from business_model.taskrule import TaskRule
 from business_model.choice.choicedate import ChoiceDate
@@ -169,10 +169,12 @@ class ScriptBankOutput:
         """
         Создание задания на создание счета юзера
         """
-        task_rule = TaskRule(self._connect_telebot.id_user, CommandsWork.COMMAND_OUTPUT)
+        task_rule = TaskRule(self._connect_telebot.id_user, TypeWork.TYPE_OUTPUT)
         task_rule.date_time = self._check_date_time.result
         task_rule.id_safe_user = self._choice_safe.result.id_safe
+        task_rule.safe_sell_name = self._choice_safe.result.safe_name
         task_rule.list_cash = self._choice_cash.list_result
+        task_rule.amount = self._choice_amount_first.result
         task_rule.fee = self._fee
         task_rule.comment = self._choice_comment.result
         task_rule.run()

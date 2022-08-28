@@ -7,16 +7,16 @@ from base.models.cash import ModelCash
 from base.models.cashsell import ModelCashSell
 from base.models.eventbank import ModelEventBank
 from base.models.task import ModelTask, TaskStatus
+from business_model.choice.choicedate import ChoiceDate
 from business_model.choice.choicepriceavr import TypeConvertatuion
 from business_model.choice.choicecash import ChoiceCashResult
-from telegram_bot.api.commandsWork import CommandsWork
+from telegram_bot.api.commandsWork import CommandsWork, TypeWork
 
 
 class ExceptionTaskList(Exception):
     def __init__(self, err_message: str = ''):
         logging.error(err_message)
         super().__init__(err_message)
-
 
 class TaskRule:
     """
@@ -31,6 +31,8 @@ class TaskRule:
         self.safe_type: str = ""
         self.safe_name: str = ""
         self.id_safe_user: int = 0
+        self.safe_buy_name: str = ''
+        self.safe_sell_name: str = ''
         self.id_cash: int = 0
         self.coin: str = ""
         self.amount: Decimal = None
@@ -45,20 +47,18 @@ class TaskRule:
 
     def run(self):
         logging.info(f'Команда выполнить задание. Тип: {self._command_type}')
-        if self._command_type == CommandsWork.COMMAND_INPUT:
+        if self._command_type == TypeWork.TYPE_INPUT:
             self._run_command_bank_input()
-        elif self._command_type == CommandsWork.COMMAND_OUTPUT:
+        elif self._command_type == TypeWork.TYPE_OUTPUT:
             self._run_command_bank_output()
-        elif self._command_type == CommandsWork.COMMAND_CONVERTATION:
+        elif self._command_type == TypeWork.TYPE_CONVERTATION:
             self._run_command_bank_convertation()
-        elif self._command_type == CommandsWork.COMMAND_COIN_TRANSFER:
+        elif self._command_type == TypeWork.TYPE_COIN_TRANSFER:
             self._run_command_bank_coin_transfer()
 
     def _run_command_bank_input(self):
         try:
-            desc = f"Добавить cash date_time:{self.date_time},  safe_name:{self.safe_name}, " \
-                   f"id_safe_user:{self.id_safe_user}, coin:{self.coin}, amount:{self.amount}, fee:{self.fee}, " \
-                   f"comment:{self.comment}"
+            desc = ModelTask.desc_in_or_out('+', self.safe_buy_name, self.coin, self.amount, self.fee)
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
                                              status=TaskStatus.RUN, date_time=self.date_time)
             id_cash_buy = ModelCash.add(id_safe_user=self.id_safe_user, date_time=self.date_time, coin=self.coin,
@@ -74,8 +74,7 @@ class TaskRule:
 
     def _run_command_bank_output(self):
         try:
-            desc = f"Снять cash date_time:{self.date_time},  id_cash:{self.id_cash}, " \
-                   f"id_safe_user:{self.id_safe_user}, amount:{self.amount}, fee:{self.fee}, comment:{self.comment}"
+            desc = ModelTask.desc_in_or_out('-', self.safe_sell_name, self.list_cash[0].coin, self.amount, self.fee)
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
                                              status=TaskStatus.RUN, date_time=self.date_time)
             list_cash_sell: List[int] = []
@@ -98,9 +97,9 @@ class TaskRule:
 
     def _run_command_bank_convertation(self):
         try:
-            desc = f"Конвертировать date_time:{self.date_time},  купить coin:{self.coin}, " \
-                   f"amount:{self.amount}, amount_sell:{self.amount_sell}, " \
-                   f"comment:{self.comment}"
+            desc = ModelTask.desc_convertation_transfer(coin_sell=self.list_cash[0].coin, amount_sell=self.amount_sell,
+                                                    coin_buy=self.coin, amount_buy=self.amount,
+                                                    safe_sell=self.safe_buy_name, safe_buy=self.safe_buy_name)
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
                                              status=TaskStatus.RUN, date_time=self.date_time)
             list_cash_sell: List[int] = []
@@ -125,10 +124,10 @@ class TaskRule:
 
     def _run_command_bank_coin_transfer(self):
         try:
-            desc = f"Перевести date_time:{self.date_time},  id_cash:{self.id_cash}, " \
-                   f"id_safe_user:{self.id_safe_user}, снять amount_sell:{self.amount_sell}, " \
-                   f"пополнить amount:{self.amount}, fee:{self.fee}, comment:{self.comment}, " \
-                   f"price_avr:{self.price_avr}, coin_avr:{self.coin_avr}"
+            desc = ModelTask.desc_convertation_transfer(coin_sell=self.list_cash[0].coin, amount_sell=self.amount_sell,
+                                                        coin_buy=self.coin, amount_buy=self.amount,
+                                                        safe_sell=self.safe_sell_name, safe_buy=self.safe_buy_name,
+                                                        fee=self.fee)
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
                                              status=TaskStatus.RUN, date_time=self.date_time)
             list_cash_sell: List[int] = []

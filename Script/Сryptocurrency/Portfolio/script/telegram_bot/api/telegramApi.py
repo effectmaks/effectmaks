@@ -43,7 +43,7 @@ class ConnectTelebot:
         self._id_user = id_user
         self.message: str = ''
         self._debug: bool = False
-        #self._ini_debug()
+        self._ini_debug()
 
     def _ini_debug(self):
         try:

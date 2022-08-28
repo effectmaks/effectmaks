@@ -68,7 +68,8 @@ class ModelCoin:
             coin_select = Coin.select().order_by(Coin.name)
             if coin_select:
                 for coin in coin_select:
-                    list_out.append(coin.name)
+                    if coin.name != ' ':  # пустая строка в базе
+                        list_out.append(coin.name)
                 return list_out
             else:
                 logging.warning(f'В таблице {cls.__name_model} нет монет.')

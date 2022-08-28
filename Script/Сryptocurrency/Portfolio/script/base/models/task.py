@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 from typing import Dict
+from decimal import Decimal
 
 from peewee import TextField, IntegerField, DateTimeField, Model
 
@@ -138,14 +139,6 @@ class ModelTask:
         cls._set_status(id_task=id_task, type_status=TaskStatus.RUN)
 
     @classmethod
-    def set_run_status(cls, id_task: int):
-        """
-        Помечает статус задания с _id_task как TaskStatus.DELETED
-        :param id_user: ID юзера
-        """
-        cls._set_status(id_task=id_task, type_status=TaskStatus.RUN)
-
-    @classmethod
     def set_completed_status(cls, id_task: int):
         """
         Помечает статус задания с _id_task как TaskStatus.DELETED
@@ -168,5 +161,51 @@ class ModelTask:
             return id_task
         except Exception as err:
             raise ExceptionInsert(cls.__name_model, str(err))
+
+    @classmethod
+    def desc_in_or_out(self, znak: str, safe_name: str,  coin: str, amount: Decimal, fee: Decimal, type_command: str = '',
+                        id_task: int = 0, date_time: datetime = None, comment: str = '') -> str:
+        desc_task = ''
+        if id_task:
+            desc_task = f'#{id_task}\n'
+        desc_date_time = ''
+        if date_time:
+            desc_date_time = f'{ChoiceDate.convert_to_str(date_time)}\n'
+        desc_type_command = ''
+        if type_command:
+            desc_type_command = f'{type_command}\n'
+        desc_comment = ''
+        if comment:
+            desc_comment = f'\n"{comment}"'
+        return f'{desc_task}{desc_date_time}{desc_type_command}{znak} {safe_name} {coin}:{amount}\nfee:{fee}{desc_comment}'
+
+    @classmethod
+    def desc_convertation_transfer(self, coin_sell: str, amount_sell: Decimal, coin_buy: str, amount_buy: Decimal,
+                           type_command: str = '', id_task: int = 0, date_time: datetime = None,
+                           comment: str = '', safe_sell: str = '', safe_buy: str = '', fee: Decimal = None) -> str:
+        desc_task = ''
+        if id_task:
+            desc_task = f'#{id_task}\n'
+        desc_date_time = ''
+        if date_time:
+            desc_date_time = f'{ChoiceDate.convert_to_str(date_time)}\n'
+        desc_type_command = ''
+        if type_command:
+            desc_type_command = f'{type_command}\n'
+        desc_comment = ''
+        if comment:
+            desc_comment = f'\n"{comment}"'
+        desc_safe_sell = ''
+        if safe_sell:
+            desc_safe_sell = f'{safe_sell}'
+        desc_safe_buy = ''
+        if safe_buy:
+            desc_safe_buy = f'{safe_buy}'
+        desc_fee = ''
+        if fee:
+            desc_fee = f'fee:{fee}\n'
+        return f'{desc_task}{desc_date_time}{desc_type_command}' \
+               f'- {desc_safe_sell} {coin_sell}:{amount_sell}\n+ {desc_safe_buy} {coin_buy}:{amount_buy}\n' \
+               f'{desc_fee}{desc_comment}'
 
 

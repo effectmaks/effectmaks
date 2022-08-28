@@ -12,7 +12,7 @@ from business_model.choice.folderChoiceFloat.questionAmount import TypesAnswerAm
 from business_model.helpers.nextfunction import NextFunction
 from business_model.helpers.questionYesNo import QuestionYesNo
 from business_model.taskrule import TaskRule
-from telegram_bot.api.commandsWork import CommandsWork
+from telegram_bot.api.commandsWork import CommandsWork, TypeWork
 from telegram_bot.api.telegramApi import ConnectTelebot
 
 
@@ -318,14 +318,16 @@ class ScriptBankConvertation:
         """
         Создание задания на создание счетов продажи и покупки юзера
         """
-        task_rule = TaskRule(self._connect_telebot.id_user, CommandsWork.COMMAND_CONVERTATION)
+        task_rule = TaskRule(self._connect_telebot.id_user, TypeWork.TYPE_CONVERTATION)
         task_rule.date_time = self._check_date_time.result
         task_rule.coin = self._choice_coin_buy.result
         task_rule.amount = self._amount_buy
+        task_rule.amount_sell = self._choice_amount_sell_before.result
         task_rule.price_avr = self._choice_price_avr.result.price_avr
         task_rule.list_cash = self._choice_cash_sell.list_result
 
         task_rule.id_safe_user = self._choice_safe.result.id_safe
+        task_rule.safe_buy_name = self._choice_safe.result.safe_name
         task_rule.type_convertation = self._choice_price_avr.result.type_convertation
         task_rule.comment = self._choice_comment.result
         task_rule.run()

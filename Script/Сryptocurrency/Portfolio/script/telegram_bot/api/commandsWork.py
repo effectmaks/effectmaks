@@ -16,3 +16,12 @@ class CommandsWork:
         for item, num in zip(list_out, range(len(list_out))):
             list_out[num] = item.replace('/', '')
         return list_out
+
+
+class TypeWork:
+    NONE = 'NONE'
+    TYPE_INPUT = CommandsWork.COMMAND_INPUT.replace('/', '')
+    TYPE_OUTPUT = CommandsWork.COMMAND_OUTPUT.replace('/', '')
+    TYPE_CONVERTATION = CommandsWork.COMMAND_CONVERTATION.replace('/', '')
+    TYPE_COIN_TRANSFER = CommandsWork.COMMAND_COIN_TRANSFER.replace('/', '')
+
