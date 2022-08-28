@@ -19,7 +19,7 @@ class Users:
         self.control_bot = ControlBot(connect_telebot)
 
     @classmethod
-    def message_info(cls, bot_telegram: TeleBot, id_user: int, message_str: str):
+    def message_info(cls, bot_telegram: TeleBot, id_user: int, message_str: str, message_id: int):
         """
         Обрабатывает сообщения юзера.
         Создает нового пользователя или обращается к существующему.
@@ -39,7 +39,7 @@ class Users:
             cls.dict_users[id_user] = user
         try:
             logging.info('||>>>||')
-            user.control_bot.new_message(message_str)
+            user.control_bot.new_message(message_str, message_id)
         except Exception as ex:
             logging.error(f'Серьезная ошибка в обработке данных {str(ex)}')
             cls.dict_users.pop(id_user, None)
@@ -57,4 +57,4 @@ class Users:
         #bot_telegram.delete_message(call.from_user.id, call.message.id)  # удалить все сообщение
         bot_telegram.edit_message_reply_markup(call.from_user.id, call.message.id)  # удалить клавиатуру
         bot_telegram.send_message(call.from_user.id, call.data)  # отправить текст выбранной кнопки
-        Users.message_info(bot_telegram, call.from_user.id, call.data)
+        Users.message_info(bot_telegram, call.from_user.id, call.data, call.message.id)

@@ -15,13 +15,13 @@ class ControlBot:
         self._command_now = CommandsWork.NONE
         self._operation_bank = None
 
-    def new_message(self, message_str: str):
+    def new_message(self, message_str: str, message_id: int):
         """
         Пришло сообщение от юзера
         :param message: Объект с текстом юзера
         """
         logging.info(f'Принято сообщение: {message_str}')
-        self._connect_telebot.message = message_str
+        self._connect_telebot.set_message(message_str, message_id)
         if self._simple_mode():
             return
         elif self._input_mode():

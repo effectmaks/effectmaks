@@ -169,7 +169,8 @@ class ChoiceDate:
             return True
 
     @classmethod
-    def convert_to_str(cls, date_time: datetime) -> str:
+    def convert_to_str(cls, date_time_str: str) -> str:
+        date_time = cls.convert(date_time_str)
         return date_time.strftime("%d.%m.%Y, %H:%M:%S")
 
 

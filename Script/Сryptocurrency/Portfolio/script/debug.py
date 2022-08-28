@@ -5,6 +5,7 @@ from datetime import datetime
 
 from base.models.cash import Cash, ModelCash
 from base.models.task import Task, ModelTask
+from business_model.choice.choicedate import ChoiceDate
 from business_model.choice.folderChoiceFloat.questionAmount import TypesAnswerAmount
 from business_model.taskrule import TaskRule
 from telegram_bot.api.commandsWork import CommandsWork
@@ -19,7 +20,7 @@ logging.basicConfig(
 )
 
 if __name__ == '__main__':
-    a_li = ModelTask.get_dict_completed(481687938, CommandsWork.COMMAND_COIN_TRANSFER)
-    print(a_li)
+    d = ModelTask.get_dict_completed(481687938, 'input')
+    print(d)
 
 
