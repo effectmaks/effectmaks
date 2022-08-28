@@ -7,7 +7,7 @@ from base.models.cash import ModelCash
 from base.models.cashsell import ModelCashSell
 from base.models.eventbank import ModelEventBank
 from base.models.task import ModelTask, TaskStatus
-from business_model.choice.choicePriceAvr import TypeConvertatuion
+from business_model.choice.choicepriceavr import TypeConvertatuion
 from business_model.choice.choicecash import ChoiceCashResult
 from telegram_bot.api.commandsWork import CommandsWork
 

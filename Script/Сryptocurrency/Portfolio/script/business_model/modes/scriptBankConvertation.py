@@ -1,7 +1,7 @@
 import logging
 from decimal import Decimal
 
-from business_model.choice.choicePriceAvr import ChoicePriceAvr
+from business_model.choice.choicepriceavr import ChoicePriceAvr
 from business_model.choice.choicecash import ChoiceCash, ModesChoiceCash
 from business_model.choice.choicecoin import ChoiceCoin, ModesChoiceCoin
 from business_model.choice.choicedate import ChoiceDate
