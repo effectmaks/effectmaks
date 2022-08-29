@@ -109,6 +109,18 @@ class ModelTask:
         try:
             logging.info('Возвращает лист с ID в status = "COMPLETED"')
             connect = ConnectSqlite.get_connect()
+            print('select task.id, task.date_time, task.desc, task.type, eventbank.comment '
+                                            'from task '
+                                            'join eventbank '
+                                            'on eventbank.id_task = task.id '
+                                            'where status = "COMPLETED" and task.id_user = {} '
+                                            'and task.type = "{}" '
+                                            '{}'
+                                            'order by task.date_time limit {}'.
+                                            format(id_user,
+                                                   task_type,
+                                                   date_time_filter,
+                                                   count_limit))
             task_list = connect.execute_sql('select task.id, task.date_time, task.desc, task.type, eventbank.comment '
                                             'from task '
                                             'join eventbank '
@@ -116,19 +128,19 @@ class ModelTask:
                                             'where status = "COMPLETED" and task.id_user = {} '
                                             'and task.type = "{}" '
                                             '{}'
-                                            'order by task.date_time desc limit {}'.
+                                            'order by task.date_time limit {}'.
                                             format(id_user,
                                                    task_type,
                                                    date_time_filter,
                                                    count_limit))
             if task_list:
-                date_last: datetime = None
+                date_next: datetime = None
                 for task in task_list:
                     task_view_item.dict_task[task[0]] = cls.task_desc(task[0], task[1], task[3], task[2], task[4])
-                    date_last = task[1]
-                    if not task_view_item.date_next:
-                        task_view_item.date_next = task[1]
-                task_view_item.date_last = date_last
+                    date_next = task[1]
+                    if not task_view_item.date_last:
+                        task_view_item.date_last = task[1]
+                task_view_item.date_next = date_next
                 logging.info('Запрос выполнен')
             else:
                 logging.info(f'В таблице {cls.__name_model} у сейфа ID:{id_user} нет выполненных статусов '

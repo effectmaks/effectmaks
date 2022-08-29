@@ -127,15 +127,27 @@ class ConnectTelebot:
         except Exception as err:
             raise ExceptionConnectTelebot(f'Ошибка создания клавиатуры - {self.view_keyboard_yes_no.__name__}')
 
-    def view_keyboard_task(self, task_list: list, message_type: MessageType):
+    def view_keyboard_task(self, text_keyboard: str, text_key: str, type_message: MessageType):
         """
         Показать клавиатуру для юзера, в режиме удаления task
         :param task_list:
         :param message_type:
         """
         try:
-            keyboard = self._create_keyboard_task(task_list, message_type)
-            self._telebot.send_message(self._id_user, text="Выберите номер задания:", reply_markup=keyboard)
+            keyboard = types.InlineKeyboardMarkup()
+            key = types.InlineKeyboardButton(text=text_key, callback_data=text_key)
+            keyboard.row(key)  # добавляем кнопку задания
+            if type_message != MessageType.VALUE:  # добавляем кнопки страниц
+                key_last = types.InlineKeyboardButton(text=NameKey.LAST.value, callback_data=NameKey.LAST.value)
+                key_next = types.InlineKeyboardButton(text=NameKey.NEXT.value, callback_data=NameKey.NEXT.value)
+                key_no = types.InlineKeyboardButton(text=NameKey.NO.value, callback_data=NameKey.NO.value)
+                if type_message == MessageType.LAST:
+                    keyboard.row(key_last, key_no)
+                elif type_message == MessageType.NEXT:
+                    keyboard.row(key_no, key_next)
+                elif type_message == MessageType.ALL:
+                    keyboard.row(key_last, key_next)
+            self._telebot.send_message(self._id_user, text=text_keyboard, reply_markup=keyboard)
         except Exception as err:
             raise ExceptionConnectTelebot(f'Ошибка создания клавиатуры - {self.view_keyboard_task.__name__}')
 

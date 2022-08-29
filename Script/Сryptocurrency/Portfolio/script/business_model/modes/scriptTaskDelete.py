@@ -32,6 +32,7 @@ class ScriptTaskDelete:
         self._message_type_triger: MessageType = MessageType.NONE
         self._task_view_item_triger: TaskViewItem = None  # сохраняет предыдущий словарь заданий, если достиг конца повторить вывод
         self._command_view: MessageType = MessageType.NONE
+        self._count_view: int = 5  # сколько выводить заданий в чате
 
     def work(self):
         """
@@ -105,31 +106,40 @@ class ScriptTaskDelete:
                                          task_type=self._choice_command,
                                          task_view_item=task_view_item,
                                          date_time_next=date_time_next,
-                                         date_time_last=date_time_last)
+                                         date_time_last=date_time_last,
+                                         count_limit=self._count_view)
 
-        if not task_view_item and self._message_type == MessageType.NONE:
+        count_task = 0
+        if task_view_item.dict_task:
+            count_task = len(task_view_item.dict_task)
+
+        if count_task != self._count_view and self._message_type == MessageType.NONE:
             self._connect_telebot.send_text(f'Нет заданий с типом: {self._choice_command}.')
             raise ExceptionScriptTaskDelete(f'У юзера нет заданий с типом: {self._choice_command}.')
-        elif not task_view_item and self._command_view == MessageType.NEXT:
+        elif count_task != self._count_view and self._command_view == MessageType.NEXT:
             # Крайняя правая страница
-            task_view_item = self._task_view_item_triger
+            #task_view_item = self._task_view_item_triger
             self._message_type = MessageType.LAST
-        elif not task_view_item and self._command_view == MessageType.LAST:
+        elif count_task != self._count_view and self._command_view == MessageType.LAST:
             # Крайняя левая страница
-            task_view_item = self._task_view_item_triger
+            #task_view_item = self._task_view_item_triger
             self._message_type = MessageType.NEXT
+        elif not self._task_view_item_triger:  # когда показывает 1 раз
+            self._message_type = MessageType.NEXT
+        elif not self._command_view == MessageType.TRIGER:
+            self._message_type = MessageType.ALL
 
+        count = 1
         self._connect_telebot.send_text("Список заданий:")
-        self._message_type = MessageType.ALL
-        for item in task_view_item.dict_task.values():
-            self._connect_telebot.send_text(item)
-        list_m: list = []
-        for key in task_view_item.dict_task.keys():
-            list_m.append(key)
+        for key, item in task_view_item.dict_task.items():
+            if count == self._count_view:
+                self._connect_telebot.view_keyboard_task(text_keyboard=item, text_key=str(key),
+                                                         type_message=self._message_type)
+            else:
+                self._connect_telebot.view_keyboard_task(text_keyboard=item, text_key=str(key),
+                                                         type_message=MessageType.VALUE)
+            count += 1
 
-
-        self._message_type = MessageType.NEXT
-        self._connect_telebot.view_keyboard_task(list_m, message_type=self._message_type)
         self._task_view_item_triger = task_view_item.__copy__()
         self._message_type_triger = self._message_type
 
@@ -148,9 +158,13 @@ class ScriptTaskDelete:
         elif self._connect_telebot.message == NameKey.NEXT.value:  # юзер нажал на следующее
             self._command_view = MessageType.NEXT
             self._view_list_task()
+            self._next_function.set(self._view_list_task_check)
+            return
         elif self._connect_telebot.message == NameKey.LAST.value:  # юзер нажал на предыдущее
             self._command_view = MessageType.LAST
             self._view_list_task()
+            self._next_function.set(self._view_list_task_check)
+            return
 
         if not self._connect_telebot.message.isdecimal():
             self._error_view_list_task()
