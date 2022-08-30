@@ -13,13 +13,11 @@ from business_model.choice.choicedate import ChoiceDate
 class TaskViewItem:
     def __init__(self):
         self.dict_task = {}
-        self.date_last: datetime = None
         self.date_next: datetime = None
 
     def __copy__(self):
         task = TaskViewItem()
         task.dict_task = self.dict_task.copy()
-        task.date_last = self.date_last
         task.date_next = self.date_next
         return task
 
@@ -50,9 +48,12 @@ class ModelTask:
     __name_model = 'task'
 
     @classmethod
-    def create(cls, id_user: int = 0, task_type: str = "", desc: str = "", status: str = "", date_time: datetime = None) -> int:
+    def create(cls, id_user: int = 0, task_type: str = "", desc: str = "",
+               status: str = "", date_time: datetime = None) -> int:
         """
         Добавляет задание в базу
+        :param date_time:
+        :param status:
         :param id_user: ID юзера
         :param task_type: Тип
         :param desc: Описание задачи
@@ -88,63 +89,53 @@ class ModelTask:
             raise ExceptionSelect(cls.__name_model, str(err))
 
     @classmethod
-    def get_dict_completed(cls, id_user: int = 0, task_type: str = "",
-                           task_view_item: TaskViewItem = None,
+    def get_dict_completed(cls, id_user: int = 0,
+                           task_type: str = "",
                            date_time_next: datetime = None,
-                           date_time_last: datetime = None,
-                           count_limit: int = 6):
+                           count_limit: int = 6,
+                           id_task: int = 0) -> TaskViewItem:
         """
-        Возвращает лист с ID в status = "COMPLETED"
-        :param count_limit:
-        :param date_time:
-        :param task_type:
+        Возвращает объект с заданиями и их информацией status = "COMPLETED"
+        :param count_limit: Кол-во сколько искать записей
+        :param date_time_next: Дата и время старше которой надо вывести задания
+        :param task_type: Тип задания(input, convert, ...)
         :param id_user: ID юзера
-        :return: Словарь с ID task Task.id, EventBank.comment, Task.date_time, Task.type, Task.desc
+        :return: объект TaskViewItem: словарь с заданиями, и старшей датой из этого словаря
         """
-        date_time_filter = ""
-        if date_time_next and date_time_last:
-            date_time_filter = f'and task.date_time <= "{date_time_next}" and task.date_time >= "{date_time_last}"'
-        elif date_time_next:
+        task_view_item = TaskViewItem()
+        date_time_filter: str = ""
+        if date_time_next:
             date_time_filter = f'and task.date_time > "{date_time_next}"'
+        id_task_filter: str = ""
+        if id_task:
+            id_task_filter = f'and task.id = {id_task}'
         try:
             logging.info('Возвращает лист с ID в status = "COMPLETED"')
             connect = ConnectSqlite.get_connect()
-            print('select task.id, task.date_time, task.desc, task.type, eventbank.comment '
-                                            'from task '
-                                            'join eventbank '
-                                            'on eventbank.id_task = task.id '
-                                            'where status = "COMPLETED" and task.id_user = {} '
-                                            'and task.type = "{}" '
-                                            '{}'
-                                            'order by task.date_time limit {}'.
-                                            format(id_user,
-                                                   task_type,
-                                                   date_time_filter,
-                                                   count_limit))
             task_list = connect.execute_sql('select task.id, task.date_time, task.desc, task.type, eventbank.comment '
                                             'from task '
                                             'join eventbank '
                                             'on eventbank.id_task = task.id '
                                             'where status = "COMPLETED" and task.id_user = {} '
                                             'and task.type = "{}" '
-                                            '{}'
+                                            '{} {} '
                                             'order by task.date_time limit {}'.
                                             format(id_user,
                                                    task_type,
                                                    date_time_filter,
+                                                   id_task_filter,
                                                    count_limit))
             if task_list:
                 date_next: datetime = None
                 for task in task_list:
                     task_view_item.dict_task[task[0]] = cls.task_desc(task[0], task[1], task[3], task[2], task[4])
                     date_next = task[1]
-                    if not task_view_item.date_last:
-                        task_view_item.date_last = task[1]
                 task_view_item.date_next = date_next
                 logging.info('Запрос выполнен')
             else:
                 logging.info(f'В таблице {cls.__name_model} у сейфа ID:{id_user} нет выполненных статусов '
                              f'с типом {task_type}.')
+            return task_view_item
         except Exception as err:
             raise ExceptionSelect(cls.__name_model, str(err))
 
@@ -191,6 +182,19 @@ class ModelTask:
     @classmethod
     def desc_in_or_out(self, znak: str, safe_name: str,  coin: str, amount: Decimal, fee: Decimal, type_command: str = '',
                         id_task: int = 0, date_time: str = '', comment: str = '') -> str:
+        """
+        Создает комментарий команд input или output для сохранения в базу
+        :param znak: "+" пополнение, "-" снятие
+        :param safe_name: Название сейфа
+        :param coin: Название монеты
+        :param amount: Объем
+        :param fee: Объем комиссии
+        :param type_command: Тип команды (input, output.)
+        :param id_task: ID задания
+        :param date_time: Дата и время операции
+        :param comment: Комментарий к заданию.
+        :return: Строка с описанием
+        """
         desc_task = ''
         if id_task:
             desc_task = f'#{id_task}\n'
@@ -209,6 +213,21 @@ class ModelTask:
     def desc_convertation_transfer(self, coin_sell: str, amount_sell: Decimal, coin_buy: str, amount_buy: Decimal,
                            type_command: str = '', id_task: int = 0, date_time: str = '',
                            comment: str = '', safe_sell: str = '', safe_buy: str = '', fee: Decimal = None) -> str:
+        """
+        Создает комментарий convertation или transfer для сохранения в базу
+        :param coin_sell: Монета продажи
+        :param amount_sell: Объем продажи
+        :param coin_buy: Монета покупки
+        :param amount_buy: Объем покупки
+        :param type_command: Тип команды (convertation, transfer)
+        :param id_task: ID задания
+        :param date_time: Дата и время
+        :param comment: Комментарий к заданию
+        :param safe_sell: Имя сейфа продажи (режим transfer)
+        :param safe_buy: Имя сейфа покупки (режим transfer)
+        :param fee: Комиссия
+        :return: Строка с описанием
+        """
         desc_task = ''
         if id_task:
             desc_task = f'#{id_task}\n'
@@ -236,6 +255,15 @@ class ModelTask:
 
     @classmethod
     def task_desc(self, task_id: int, date_time: str, task_type: str, desc: str, comment: str) -> str:
+        """
+        Для юзера информация о задании
+        :param task_id: ID задания
+        :param date_time: Дата и время задания
+        :param task_type: Тип задания (input, output, convertation, transfer)
+        :param desc: Описания задания с базы
+        :param comment: Комментария пользователя
+        :return:
+        """
         desc_date_time = f'{ChoiceDate.convert_to_str(date_time)}'
         return f'# {task_id}\n{desc_date_time}\nКоманда: {task_type}\n' \
                f'{desc}\n"{comment}"'

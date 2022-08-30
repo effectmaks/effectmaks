@@ -28,11 +28,10 @@ class ScriptTaskDelete:
         self._question_yes_no: QuestionYesNo
         self._choice_command: str = ""
         self._choice_id_task: int = 0
-        self._message_type: MessageType = MessageType.NONE
-        self._message_type_triger: MessageType = MessageType.NONE
         self._task_view_item_triger: TaskViewItem = None  # сохраняет предыдущий словарь заданий, если достиг конца повторить вывод
+        self._keys_task_view_item: List[int] = []  # ID записей который выведены на экран
         self._command_view: MessageType = MessageType.NONE
-        self._count_view: int = 5  # сколько выводить заданий в чате
+        self._count_view: int = 4  # сколько выводить заданий в чате
 
     def work(self):
         """
@@ -57,13 +56,14 @@ class ScriptTaskDelete:
         if self._connect_telebot.message in CommandsWork.get_list_operations():
             self._choice_command = self._connect_telebot.message
             logging.info('Выбран _choice_command')
+            self._task_view_item_triger = None
             self._view_list_task()
         else:
             self._error_choice_type_command_check()
 
     def _error_choice_type_command_check(self):
         """
-        Пользователь выбрал не из списка команды
+        Пользователь выбрал не из списка команд
         """
         self._question_yes_no = QuestionYesNo(self._connect_telebot, f"Нет в списке команды - "
                                                                      f"{self._connect_telebot.message}.")
@@ -71,7 +71,7 @@ class ScriptTaskDelete:
 
     def _wait_answer_choice_type_command(self):
         """
-        Ожидание будет ли повторять выбор команды
+        Ожидание будет ли повторять выбор команды из списка
         """
         logging.info(f'Ожидание будет ли повторять выбор команды')
         b_working = self._question_yes_no.work()
@@ -90,78 +90,59 @@ class ScriptTaskDelete:
         """
         logging.info(f'Режим вывести список заданий')
         date_time_next = None
-        date_time_last = None
         if self._command_view == MessageType.NEXT:
             date_time_next = self._task_view_item_triger.date_next
-        elif self._command_view == MessageType.LAST:
-            date_time_next = self._task_view_item_triger.date_next
-            date_time_last = self._task_view_item_triger.date_last
 
-        if self._command_view == MessageType.TRIGER:
-            task_view_item = self._task_view_item_triger
-            self._message_type = self._message_type_triger
-        else:
-            task_view_item = TaskViewItem()
-            ModelTask.get_dict_completed(self._connect_telebot.id_user,
-                                         task_type=self._choice_command,
-                                         task_view_item=task_view_item,
-                                         date_time_next=date_time_next,
-                                         date_time_last=date_time_last,
-                                         count_limit=self._count_view)
+        task_view_item: TaskViewItem = ModelTask.get_dict_completed(self._connect_telebot.id_user,
+                                                                     task_type=self._choice_command,
+                                                                     date_time_next=date_time_next,
+                                                                     count_limit=self._count_view)
 
         count_task = 0
         if task_view_item.dict_task:
             count_task = len(task_view_item.dict_task)
 
-        if count_task != self._count_view and self._message_type == MessageType.NONE:
+        message_type: MessageType = MessageType.NONE
+        if count_task == 0 and not self._task_view_item_triger:  # проверяет условие на 1 раз потом
             self._connect_telebot.send_text(f'Нет заданий с типом: {self._choice_command}.')
             raise ExceptionScriptTaskDelete(f'У юзера нет заданий с типом: {self._choice_command}.')
-        elif count_task != self._count_view and self._command_view == MessageType.NEXT:
-            # Крайняя правая страница
-            #task_view_item = self._task_view_item_triger
-            self._message_type = MessageType.LAST
-        elif count_task != self._count_view and self._command_view == MessageType.LAST:
-            # Крайняя левая страница
-            #task_view_item = self._task_view_item_triger
-            self._message_type = MessageType.NEXT
         elif not self._task_view_item_triger:  # когда показывает 1 раз
-            self._message_type = MessageType.NEXT
-        elif not self._command_view == MessageType.TRIGER:
-            self._message_type = MessageType.ALL
+            message_type = MessageType.NEXT
+            self._connect_telebot.send_text("Выберите задание из списка:")
 
         count = 1
-        self._connect_telebot.send_text("Список заданий:")
+        b_end_task: bool = False
         for key, item in task_view_item.dict_task.items():
-            if count == self._count_view:
-                self._connect_telebot.view_keyboard_task(text_keyboard=item, text_key=str(key),
-                                                         type_message=self._message_type)
+            self._keys_task_view_item.append(key)
+            if count == count_task:
+                if count < self._count_view:
+                    b_end_task = True
+                    message_type = MessageType.VALUE
+                self._connect_telebot.view_keyboard_task(text_keyboard=item,
+                                                         text_key=str(key),
+                                                         type_message=message_type)
             else:
-                self._connect_telebot.view_keyboard_task(text_keyboard=item, text_key=str(key),
+                self._connect_telebot.view_keyboard_task(text_keyboard=item,
+                                                         text_key=str(key),
                                                          type_message=MessageType.VALUE)
             count += 1
 
+        if count_task == 0 or b_end_task:
+            self._connect_telebot.send_text(text_send=f"Задания закончились.\n"
+                                                      f"Выберите задание из списка выше.")
+
+
         self._task_view_item_triger = task_view_item.__copy__()
-        self._message_type_triger = self._message_type
 
         self._next_function.set(self._view_list_task_check)
 
     def _view_list_task_check(self):
         """
-        Режим проверяет ответ пользователя, по выбранному заданию
+        Режим проверяет ответ пользователя, по выбранному заданию из списка
         """
         logging.info(f'Режим проверить "{self._connect_telebot.message}" - это ID задания?')
-        if self._connect_telebot.message == NameKey.NO.value:  # юзер нажал на точку
-            self._command_view = MessageType.TRIGER
-            self._view_list_task()
-            self._next_function.set(self._view_list_task_check)
-            return
-        elif self._connect_telebot.message == NameKey.NEXT.value:  # юзер нажал на следующее
+        if self._connect_telebot.message == NameKey.NEXT.value:  # юзер нажал на следующее
             self._command_view = MessageType.NEXT
-            self._view_list_task()
-            self._next_function.set(self._view_list_task_check)
-            return
-        elif self._connect_telebot.message == NameKey.LAST.value:  # юзер нажал на предыдущее
-            self._command_view = MessageType.LAST
             self._view_list_task()
             self._next_function.set(self._view_list_task_check)
             return
@@ -169,7 +150,7 @@ class ScriptTaskDelete:
         if not self._connect_telebot.message.isdecimal():
             self._error_view_list_task()
 
-        if int(self._connect_telebot.message) in self._task_view_item.keys():
+        if int(self._connect_telebot.message) in self._keys_task_view_item:
             self._choice_id_task = int(self._connect_telebot.message)
             logging.info('Выбран _choice_id_task')
             self._choice_question_delete()
@@ -182,6 +163,7 @@ class ScriptTaskDelete:
         """
         self._question_yes_no = QuestionYesNo(self._connect_telebot,
                                               f'Нет в списке задания ID - {self._connect_telebot.message}.')
+
         self._next_function.set(self._wait_view_list_task)
 
     def _wait_view_list_task(self):
@@ -203,8 +185,12 @@ class ScriptTaskDelete:
         """
         Режим точно хотите удалить?
         """
-        text = self._task_view_item[self._choice_id_task]
-        self._question_yes_no = QuestionYesNo(self._connect_telebot, "", question=f"{text}\nТочно удалить?")
+        task_view_item: TaskViewItem = ModelTask.get_dict_completed(self._connect_telebot.id_user,
+                                                                    task_type=self._choice_command,
+                                                                    id_task=self._choice_id_task)
+        text = task_view_item.dict_task[self._choice_id_task]
+        self._connect_telebot.send_text(text_send=f'Будет удалено:\n{text}')
+        self._question_yes_no = QuestionYesNo(self._connect_telebot, "", question="Точно удалить?")
         self._wait_question_delete()
 
     def _wait_question_delete(self):

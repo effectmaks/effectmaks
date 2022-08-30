@@ -57,6 +57,9 @@ class TaskRule:
             self._run_command_bank_coin_transfer()
 
     def _run_command_bank_input(self):
+        """
+        Выполняет команду по сохранению данных в базу команды input
+        """
         try:
             desc = ModelTask.desc_in_or_out('+', self.safe_buy_name, self.coin, self.amount, self.fee)
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
@@ -73,6 +76,9 @@ class TaskRule:
             raise ExceptionTaskList(f'Ошибка {CommandsWork.COMMAND_INPUT}: {err}')
 
     def _run_command_bank_output(self):
+        """
+        Выполняет команду по сохранению данных в базу команды  output
+        """
         try:
             desc = ModelTask.desc_in_or_out('-', self.safe_sell_name, self.list_cash[0].coin, self.amount, self.fee)
             self._id_task = ModelTask.create(id_user=self._id_user, task_type=self._command_type, desc=desc,
@@ -96,6 +102,9 @@ class TaskRule:
             raise ExceptionTaskList(f'Ошибка {CommandsWork.COMMAND_OUTPUT}: {err}')
 
     def _run_command_bank_convertation(self):
+        """
+        Выполняет команду по сохранению данных в базу команды convertation
+        """
         try:
             desc = ModelTask.desc_convertation_transfer(coin_sell=self.list_cash[0].coin, amount_sell=self.amount_sell,
                                                     coin_buy=self.coin, amount_buy=self.amount,
@@ -123,6 +132,9 @@ class TaskRule:
             raise ExceptionTaskList(f'Ошибка {CommandsWork.COMMAND_CONVERTATION}: {err}')
 
     def _run_command_bank_coin_transfer(self):
+        """
+        Выполняет команду по сохранению данных в базу команды transfer
+        """
         try:
             desc = ModelTask.desc_convertation_transfer(coin_sell=self.list_cash[0].coin, amount_sell=self.amount_sell,
                                                         coin_buy=self.coin, amount_buy=self.amount,
@@ -153,12 +165,20 @@ class TaskRule:
             raise ExceptionTaskList(f'Ошибка {CommandsWork.COMMAND_COIN_TRANSFER}: {err}')
 
     def _get_price_sell(self) -> Decimal:
+        """
+        В зависимости от type_convertation возвращает число
+        :return: Decimal
+        """
         if self.type_convertation == TypeConvertatuion.SELL:
             return self.price_avr
         else:
             return Decimal(0)
 
     def _get_price_buy(self) -> Decimal:
+        """
+        В зависимости от type_convertation возвращает число
+        :return: Decimal
+        """
         if self.type_convertation == TypeConvertatuion.BUY:
             return self.price_avr
         else:

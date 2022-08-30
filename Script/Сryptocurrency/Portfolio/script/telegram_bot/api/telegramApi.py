@@ -36,9 +36,8 @@ class MessageType(Enum):
 
 
 class NameKey(Enum):
-    LAST = '<<'
-    NEXT = '>>'
-    NO = '|'
+    NEXT = 'ПОКАЗАТЬ ЕЩЁ'
+
 
 class Message:
     def __init__(self, id_user: int, text: str):
@@ -135,55 +134,17 @@ class ConnectTelebot:
         """
         try:
             keyboard = types.InlineKeyboardMarkup()
-            key = types.InlineKeyboardButton(text=text_key, callback_data=text_key)
-            keyboard.row(key)  # добавляем кнопку задания
+            if text_key != "":
+                key = types.InlineKeyboardButton(text=text_key, callback_data=text_key)
+                keyboard.row(key)  # добавляем кнопку задания
+                self._telebot.send_message(self._id_user, text=text_keyboard, reply_markup=keyboard)
             if type_message != MessageType.VALUE:  # добавляем кнопки страниц
-                key_last = types.InlineKeyboardButton(text=NameKey.LAST.value, callback_data=NameKey.LAST.value)
+                keyboard = types.InlineKeyboardMarkup()
                 key_next = types.InlineKeyboardButton(text=NameKey.NEXT.value, callback_data=NameKey.NEXT.value)
-                key_no = types.InlineKeyboardButton(text=NameKey.NO.value, callback_data=NameKey.NO.value)
-                if type_message == MessageType.LAST:
-                    keyboard.row(key_last, key_no)
-                elif type_message == MessageType.NEXT:
-                    keyboard.row(key_no, key_next)
-                elif type_message == MessageType.ALL:
-                    keyboard.row(key_last, key_next)
-            self._telebot.send_message(self._id_user, text=text_keyboard, reply_markup=keyboard)
+                keyboard.row(key_next)
+                self._telebot.send_message(self._id_user, text="Показать дополнительные задания?", reply_markup=keyboard)
+
         except Exception as err:
             raise ExceptionConnectTelebot(f'Ошибка создания клавиатуры - {self.view_keyboard_task.__name__}')
-
-    def update_keyboard_task(self, task_list: list, message_type: MessageType):
-        """
-        Обновление клавиатуры для юзера, в режиме удаления task
-        :param task_list:
-        :param message_type:
-        """
-        keyboard = self._create_keyboard_task(task_list, message_type)
-        self._telebot.edit_message_reply_markup(chat_id=self._id_user, message_id=self._message_id_prev,
-                                                reply_markup=keyboard)
-
-    def _create_keyboard_task(self, task_list: list, message_type: MessageType):
-        """
-        Создание списка кнопок для юзера, в режиме удаления task
-        :param task_list:
-        :param message_type:
-        """
-        keyboard = types.InlineKeyboardMarkup()
-        count = 0
-        for i in range(0, 2):
-            key_1 = types.InlineKeyboardButton(text=task_list[i + count], callback_data=task_list[i + count])
-            key_2 = types.InlineKeyboardButton(text=task_list[i + count + 1], callback_data=task_list[i + count] + 1)
-            key_3 = types.InlineKeyboardButton(text=task_list[i + count + 2], callback_data=task_list[i + count] + 1)
-            keyboard.row(key_1, key_2, key_3)
-            count += 2
-        key_last = types.InlineKeyboardButton(text=NameKey.LAST.value, callback_data=NameKey.LAST.value)
-        key_next = types.InlineKeyboardButton(text=NameKey.NEXT.value, callback_data=NameKey.NEXT.value)
-        key_no = types.InlineKeyboardButton(text=NameKey.NO.value, callback_data=NameKey.NO.value)
-        if message_type == message_type.LAST:
-            keyboard.row(key_last, key_no)
-        elif message_type == message_type.NEXT:
-            keyboard.row(key_no, key_next)
-        elif message_type == message_type.ALL:
-            keyboard.row(key_last, key_next)
-        return keyboard
 
 
