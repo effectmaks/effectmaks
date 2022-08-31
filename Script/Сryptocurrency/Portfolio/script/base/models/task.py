@@ -112,11 +112,18 @@ class ModelTask:
         try:
             logging.info('Возвращает лист с ID в status = "COMPLETED"')
             connect = ConnectSqlite.get_connect()
-            task_list = connect.execute_sql('select task.id, task.date_time, task.desc, task.type, eventbank.comment '
+            task_list = connect.execute_sql('select task.id, task.date_time, task.desc, task.type, '
+                                            'eventbank.comment, cashsell_task.count_task_subject '
                                             'from task '
                                             'join eventbank '
                                             'on eventbank.id_task = task.id '
-                                            'where status = "COMPLETED" and task.id_user = {} '
+                                            'left join '
+                                            '(select id_task, id_cash, count(id_task) as count_task_subject '
+                                            'from cashsell group by id_cash) as cashsell_task '
+                                            'on cashsell_task.id_cash = eventbank.id_cash_buy '
+                                            'and not cashsell_task.id_task = eventbank.id_task ' 
+                                            'where status = "COMPLETED" '
+                                            'and task.id_user = {} '
                                             'and task.type = "{}" '
                                             '{} {} '
                                             'order by task.date_time limit {}'.
@@ -128,7 +135,8 @@ class ModelTask:
             if task_list:
                 date_next: datetime = None
                 for task in task_list:
-                    task_view_item.dict_task[task[0]] = cls.task_desc(task[0], task[1], task[3], task[2], task[4])
+                    task_view_item.dict_task[task[0]] = cls.task_desc(task[0], task[1], task[3],
+                                                                      task[2], task[4], task[5])
                     date_next = task[1]
                 task_view_item.date_next = date_next
                 logging.info('Запрос выполнен')
@@ -254,18 +262,27 @@ class ModelTask:
                f'{desc_fee}{desc_comment}'
 
     @classmethod
-    def task_desc(self, task_id: int, date_time: str, task_type: str, desc: str, comment: str) -> str:
+    def task_desc(self, task_id: int, date_time_str: str, task_type: str, desc: str, comment: str,
+                  task_id_subject_count: int = 0, date_time_dt: datetime = None) -> str:
         """
         Для юзера информация о задании
+        :param task_id_subject_count: ID зависимого задания
         :param task_id: ID задания
-        :param date_time: Дата и время задания
+        :param date_time_str: Дата и время задания
         :param task_type: Тип задания (input, output, convertation, transfer)
         :param desc: Описания задания с базы
         :param comment: Комментария пользователя
         :return:
         """
-        desc_date_time = f'{ChoiceDate.convert_to_str(date_time)}'
-        return f'# {task_id}\n{desc_date_time}\nКоманда: {task_type}\n' \
+        desc_task_count_subject: str = ''
+        if task_id_subject_count:
+            desc_task_count_subject = f'Зависимых заданий: {task_id_subject_count} шт.\n'
+            desc_date_time: str = ''
+        if date_time_str:
+            desc_date_time = f'{ChoiceDate.convert_to_str(date_time_str)}'
+        elif date_time_dt:
+            desc_date_time = f'{date_time_dt.strftime("%d.%m.%Y, %H:%M:%S")}'
+        return f'# {task_id}\n{desc_task_count_subject}{desc_date_time}\nКоманда: {task_type}\n' \
                f'{desc}\n"{comment}"'
 
     @classmethod
@@ -281,21 +298,22 @@ class ModelTask:
             items = Task.select(Task.id, EventBank.comment, Task.date_time, Task.type, Task.desc).join(EventBank, on=(EventBank.id_task == Task.id)).where(Task.id == id_task)
             info_str = ""
             for item in items:
-                info_str = cls.task_desc(item.id, item.date_time, item.type, item.desc, item.eventbank.comment)
+                info_str = cls.task_desc(item.id, "", item.type, item.desc, item.eventbank.comment,
+                                         date_time_dt=item.date_time)
             logging.info(f'Успешно выгружено инфо.')
             return info_str
         except Exception as err:
             raise ExceptionSelect(cls.__name_model, str(err))
 
     @classmethod
-    def get_dict_addiction(cls, id_task: int) -> Dict[int, str]:
+    def get_dict_task_subject(cls, id_task: int) -> Dict[int, str]:
         """
         Выгрузить зависимые от ID_задания:{id_task}
         :param id_task: ID задания
         :return: Словарь с описанием заданий
         """
 
-        logging.info(f'Команда выгрузить инфо ID_задания:{id_task}.')
+        logging.info(f'Выгрузить зависимые от ID_задания:{id_task}.')
         dict_out: Dict[int, str] = {}
         try:
             connect = ConnectSqlite.get_connect()
@@ -308,8 +326,7 @@ class ModelTask:
 
             if task_list:
                 for task in task_list:
-                    info = cls.get_info(task[0])
-                    dict_out[task[0]] = info
+                    dict_out[task[0]] = cls.get_info(task[0])
             return dict_out
         except Exception as err:
             raise ExceptionSelect(cls.__name_model, str(err))

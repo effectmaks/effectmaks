@@ -60,7 +60,7 @@ class ModelCash:
         :param id_task: ID задания
         """
         logging.info(
-            f'Добавить счет id_safe_user:{id_safe_user}, date_time:{date_time}, coin:{coin}, amount_buy:{amount_buy}, '
+            f'Добавить счет id_safe_user:{id_safe_user}, date_time_str:{date_time}, coin:{coin}, amount_buy:{amount_buy}, '
             f'price_buy:{price_buy}, _id_task:{id_task}')
         try:
             id_cash = Cash.create(id_safe_user=id_safe_user,
@@ -101,7 +101,7 @@ class ModelCash:
             cash_list = Cash.select().where(Cash.id_task == id_task)
             for cash in cash_list:
                 logging.info(f'Будет удалено в таблице {cls.__name_model}: счет id_safe:{cash.id_safe_user}, '
-                             f'date_time:{cash.date_time}, coin:{cash.coin}, amount_buy:{cash.amount_buy}, '
+                             f'date_time_str:{cash.date_time}, coin:{cash.coin}, amount_buy:{cash.amount_buy}, '
                              f'price_buy:{cash.price_buy}')
                 must_delete = True
             return must_delete
@@ -186,15 +186,15 @@ class ModelCash:
                 str_id += str(item) + str_end
             sql_cash_no_view = f'and not cash.id in ({str_id})'
         if filter_cash_date_before != None:
-            sql_cash_date_before = f'and cash.date_time <= "{filter_cash_date_before}"'
+            sql_cash_date_before = f'and cash.date_time_str <= "{filter_cash_date_before}"'
         try:
             dict_out = {}
             connect = ConnectSqlite.get_connect()
-            cash_list = connect.execute_sql('select id, coin, amount, price_buy, coin_avr, date_time '
+            cash_list = connect.execute_sql('select id, coin, amount, price_buy, coin_avr, date_time_str '
                                             'from (select cash.id, cash.coin, (cash.amount_buy - '
                                             'CASE WHEN sum_cash_sell.amount IS NULL '
                                             'THEN 0 else sum_cash_sell.amount end) as amount, '
-                                            'cash.price_buy, cash.coin_avr,cash.date_time '
+                                            'cash.price_buy, cash.coin_avr,cash.date_time_str '
                                             'from cash '
                                             'left join (select id_cash, sum(amount_sell) as amount '
                                             'from cashsell group by id_cash) as sum_cash_sell '

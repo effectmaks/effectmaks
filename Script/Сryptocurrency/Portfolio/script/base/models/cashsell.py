@@ -37,7 +37,7 @@ class ModelCashSell:
         :param price_sell: Цена покупки
         """
         logging.info(
-                f'Добавить списание со счета id_task:{id_task}, date_time:{date_time} id_cash:{id_cash} amount_sell:{amount_sell} '
+                f'Добавить списание со счета id_task:{id_task}, date_time_str:{date_time} id_cash:{id_cash} amount_sell:{amount_sell} '
                 f'price_sell:{price_sell}')
         try:
             id_cash_sell = CashSell.create(id_task=id_task,
@@ -76,7 +76,7 @@ class ModelCashSell:
             cash_list = CashSell.select().where(CashSell.id_task == id_task)
             for cash in cash_list:
                 logging.info(f'Будет удалено в таблице {cls.__name_model}: счет id:{cash.id}, '
-                                f'date_time:{cash.date_time}, id_cash:{cash.id_cash}, amount_sell:{cash.amount_sell}, '
+                                f'date_time_str:{cash.date_time}, id_cash:{cash.id_cash}, amount_sell:{cash.amount_sell}, '
                                 f'price_sell:{cash.price_sell}')
                 must_delete = True
             return must_delete

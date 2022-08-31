@@ -52,7 +52,7 @@ class ScriptBankOutput:
         if working:
             self._next_function.set(self._work_choice_date)
         else:
-            logging.info('Выбран date_time')
+            logging.info('Выбран date_time_str')
             self._work_choice_safe()
 
     def _work_choice_safe(self):

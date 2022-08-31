@@ -24,7 +24,7 @@ class ScriptTaskDelete:
         logging.info('Создание объекта ScriptTaskDelete')
         self._connect_telebot = connect_telebot
         self._next_function = NextFunction(ScriptTaskDelete.__name__)
-        self._next_function.set(self._choice_type_command)
+        self._next_function.set(self._choice_mode)
         self._question_yes_no: QuestionYesNo
         self._choice_command: str = ""
         self._choice_id_task: int = 0
@@ -32,6 +32,8 @@ class ScriptTaskDelete:
         self._keys_task_view_item: List[int] = []  # ID записей который выведены на экран
         self._command_view: MessageType = MessageType.NONE
         self._count_view: int = 4  # сколько выводить заданий в чате
+        self._MODE_ID = 'НОМЕР'
+        self._MODE_LIST = 'СПИСОК'
 
     def work(self):
         """
@@ -39,6 +41,48 @@ class ScriptTaskDelete:
         """
         if self._next_function.work():  # функция выполнилась
             return
+
+    def _choice_mode(self):
+        """
+        Вопрос юзеру о выборе режима поиска
+        """
+        logging.info(f'Вопрос юзеру о выборе режима поиска')
+        self._connect_telebot.view_keyboard('Выберите режим поиска:', list_view=[self._MODE_ID, self._MODE_LIST])
+        self._next_function.set(self._wait_choice_mode)
+
+    def _wait_choice_mode(self):
+        """
+        Ожидание ответа юзера на выбор режима поиска
+        """
+        logging.info(f'Ожидание ответа юзера на выбор режима поиска')
+        if self._connect_telebot.message == self._MODE_ID:
+            self._choice_id_task_func()
+        elif self._connect_telebot.message == self._MODE_LIST:
+            self._choice_type_command()
+        else:
+            self._choice_mode()
+
+    def _choice_id_task_func(self):
+        """
+        Вопрос юзеру какой ID задания
+        """
+        logging.info(f'Вопрос юзеру какой ID задания')
+        self._connect_telebot.send_text('Введите номер задания:')
+        self._next_function.set(self._choice_id_task_func_check)
+
+    def _choice_id_task_func_check(self):
+        """
+        Проверка введенного юзером  ID задания
+        """
+        logging.info(f'Проверка введенного юзером  ID задания')
+
+        if not self._connect_telebot.message.isdecimal():
+            self._connect_telebot.send_text(f'Не число - {self._connect_telebot.message}\n.Повторите ввод.')
+            self._choice_id_task_func()
+
+        self._choice_id_task = int(self._connect_telebot.message)
+        logging.info('Выбран _choice_id_task')
+        self._check_id_task()
 
     def _choice_type_command(self):
         """
@@ -153,7 +197,7 @@ class ScriptTaskDelete:
         if int(self._connect_telebot.message) in self._keys_task_view_item:
             self._choice_id_task = int(self._connect_telebot.message)
             logging.info('Выбран _choice_id_task')
-            self._choice_question_delete()
+            self._check_id_task()
         else:
             self._error_view_list_task()
 
@@ -180,6 +224,21 @@ class ScriptTaskDelete:
             self._view_list_task()  # Повторить
         else:
             raise ExceptionScriptTaskDelete('Юзер отказался повторять. Он не выбрал задание для удаления.')
+
+    def _check_id_task(self):
+        """
+        Проверить есть ли у выбранного задания зависимости
+        :return:
+        """
+        dict_task: Dict[int, str] = ModelTask.get_dict_task_subject(self._choice_id_task)
+        if not dict_task:
+            self._choice_question_delete()
+
+        self._connect_telebot.send_text(text_send=f'УДАЛИТЬ НЕВОЗМОЖНО!\n'
+                                                  f'Имеются зависимые задания.')
+        for item in dict_task.values():
+            self._connect_telebot.send_text(text_send=item.__str__())
+        raise ExceptionScriptTaskDelete('УДАЛИТЬ НЕВОЗМОЖНО! Имеются зависимые задания.')
 
     def _choice_question_delete(self):
         """

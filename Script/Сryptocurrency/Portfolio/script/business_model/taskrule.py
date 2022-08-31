@@ -18,6 +18,7 @@ class ExceptionTaskList(Exception):
         logging.error(err_message)
         super().__init__(err_message)
 
+
 class TaskRule:
     """
     Выполняет задание на заполнение базы данными
