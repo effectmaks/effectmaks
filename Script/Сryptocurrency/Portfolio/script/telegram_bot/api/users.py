@@ -2,7 +2,7 @@ import logging
 from typing import Dict
 from telebot import TeleBot
 from ..controlBot import ControlBot
-from .telegramApi import Message, ConnectTelebot
+from .telegramApi import Message, ConnectTelebot, TypeMessage
 from business_model.taskrule import TaskRule
 
 
@@ -19,30 +19,27 @@ class Users:
         self.control_bot = ControlBot(connect_telebot)
 
     @classmethod
-    def message_info(cls, bot_telegram: TeleBot, id_user: int, message_str: str, message_id: int):
+    def message_info(cls, bot_telegram: TeleBot, message: Message):
         """
         Обрабатывает сообщения юзера.
         Создает нового пользователя или обращается к существующему.
-        :param message_str:
-        :param id_user:
-        :param bot_telegram:
         :return:
         """
         logging.info('>||')
-        user = cls.dict_users.get(id_user)
+        user = cls.dict_users.get(message.id_user)
         if user:
-            logging.info(f'Новое сообщение id_user:{id_user}')
+            logging.info(f'Новое сообщение id_user:{message.id_user}')
         else:
-            logging.info(f'Новый user_id:{id_user}')
-            TaskRule.check_delete(id_user)  # Проверяет базу на наличие запущенных заданий и удаляет их
-            user = Users(bot_telegram, id_user)
-            cls.dict_users[id_user] = user
+            logging.info(f'Новый user_id:{message.id_user}')
+            TaskRule.check_delete(message.id_user)  # Проверяет базу на наличие запущенных заданий и удаляет их
+            user = Users(bot_telegram, message.id_user)
+            cls.dict_users[message.id_user] = user
         try:
             logging.info('||>>>||')
-            user.control_bot.new_message(message_str, message_id)
+            user.control_bot.new_message(message)
         except Exception as ex:
             logging.error(f'Серьезная ошибка в обработке данных {str(ex)}')
-            cls.dict_users.pop(id_user, None)
+            cls.dict_users.pop(message.id_user, None)
         logging.info('||>')
 
     @classmethod
@@ -54,7 +51,6 @@ class Users:
         :param message:
         :return:
         """
-        #bot_telegram.delete_message(call.from_user.id, call.message.id)  # удалить все сообщение
-        bot_telegram.edit_message_reply_markup(call.from_user.id, call.message.id)  # удалить клавиатуру
-        bot_telegram.send_message(call.from_user.id, call.data)  # отправить текст выбранной кнопки
-        Users.message_info(bot_telegram, call.from_user.id, call.data, call.message.id)
+        message = Message(id_user=call.from_user.id, text=call.data, id_message=call.message.id,
+                          type_message=TypeMessage.KEYBOARD)
+        Users.message_info(bot_telegram, message)

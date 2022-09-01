@@ -16,13 +16,9 @@ class ExceptionTelegramApi(Exception):
         super().__init__(err_message)
 
 
-class FromUser:
-    def __init__(self, id_user: int):
-        self._id_user: int = id_user
-
-    @property
-    def id(self) -> int:
-        return self._id_user
+class TypeMessage(Enum):
+    KEYBOARD = 1
+    TEXT = 2
 
 
 class MessageType(Enum):
@@ -40,22 +36,29 @@ class NameKey(Enum):
 
 
 class Message:
-    def __init__(self, id_user: int, text: str):
-        self.from_user = FromUser(id_user)
+    def __init__(self, id_user: int, text: str, id_message: int, type_message: TypeMessage):
+        self.id_user = id_user
         self.text = text
+        self.id = id_message
+        self.type = type_message
 
 
 class ConnectTelebot:
     def __init__(self, telebot: TeleBot, id_user: int):
         self._telebot = telebot
         self._id_user = id_user
-        self.message_id: int = 0
-        self.message: str = ''
+        self._id_message: int = 0
+        self._message: str = ''
         self._message_id_prev: int = 0
         self._debug: bool = False
         self._ini_debug()
         self._keyboard = None
+        self.work: bool = False
 
+    @property
+    def message(self):
+        return self._message
+        
     def _ini_debug(self):
         try:
             id_programmer = os.getenv('ID_programmer')
@@ -64,10 +67,11 @@ class ConnectTelebot:
         except Exception as err:
             logging.warning('Невозможно инициализировать id_programmer')
 
-    def set_message(self, message: str, m_id: int):
-        self._message_id_prev = self.message_id
-        self.message_id = m_id
-        self.message = message
+    def set_message(self, message: Message):
+        self._message_id_prev = self._id_message
+        self._id_message = message.id
+        self._message = message.text
+        self._type_message = message.type
 
     @property
     def debug(self) -> bool:
@@ -146,5 +150,13 @@ class ConnectTelebot:
 
         except Exception as err:
             raise ExceptionConnectTelebot(f'Ошибка создания клавиатуры - {self.view_keyboard_task.__name__}')
-
+        
+    def delete_keyboard(self):
+        """
+        Удалить клавиатуру у юзера
+        """
+        if self._type_message == TypeMessage.KEYBOARD:
+            # bot_telegram.delete_message(call.from_user.id, call.message.id)  # удалить все сообщение
+            self._telebot.edit_message_reply_markup(self._id_user, self._id_message)  # удалить клавиатуру
+            self._telebot.send_message(self._id_user, self._message)  # отправить текст выбранной кнопки
 

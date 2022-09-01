@@ -105,7 +105,7 @@ class ModelTask:
         task_view_item = TaskViewItem()
         date_time_filter: str = ""
         if date_time_next:
-            date_time_filter = f'and task.date_time > "{date_time_next}"'
+            date_time_filter = f'and task.date_time < "{date_time_next}"'
         id_task_filter: str = ""
         if id_task:
             id_task_filter = f'and task.id = {id_task}'
@@ -126,7 +126,7 @@ class ModelTask:
                                             'and task.id_user = {} '
                                             'and task.type = "{}" '
                                             '{} {} '
-                                            'order by task.date_time limit {}'.
+                                            'order by task.date_time desc limit {}'.
                                             format(id_user,
                                                    task_type,
                                                    date_time_filter,

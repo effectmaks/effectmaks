@@ -6,6 +6,8 @@ import time
 from telebot import TeleBot
 from dotenv import load_dotenv
 from telegram_bot.api.users import Users
+from telegram_bot.api.telegramApi import Message, TypeMessage
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -28,8 +30,10 @@ def start_bot():
     bot_telegram = TeleBot(os.getenv('API_token'))
 
     @bot_telegram.message_handler(content_types=['text'])
-    def new_message(message):
-        Users.message_info(bot_telegram, message.from_user.id, message.text, message.id)
+    def new_message(message_api):
+        message = Message(id_user=message_api.from_user.id, text=message_api.text, id_message=message_api.id,
+                          type_message=TypeMessage.TEXT)
+        Users.message_info(bot_telegram, message)
 
     @bot_telegram.callback_query_handler(func=lambda call: True)
     def click_button(call):

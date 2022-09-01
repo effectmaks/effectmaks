@@ -1,5 +1,5 @@
 import logging
-from .api.telegramApi import ConnectTelebot
+from .api.telegramApi import ConnectTelebot, Message
 from business_model.operationBank import OperationBank
 from .api.commandsWork import CommandsWork
 
@@ -15,17 +15,22 @@ class ControlBot:
         self._command_now = CommandsWork.NONE
         self._operation_bank = None
 
-    def new_message(self, message_str: str, message_id: int):
+    def new_message(self, message: Message):
         """
         Пришло сообщение от юзера
         :param message: Объект с текстом юзера
         """
-        logging.info(f'Принято сообщение: {message_str}')
-        self._connect_telebot.set_message(message_str, message_id)
-        if self._simple_mode():
+        logging.info(f'Принято сообщение: {message.text}')
+        if self._connect_telebot.work:
+            logging.info(f'Но программа еще выполняется! Сообщение не принято!')
             return
-        elif self._input_mode():
-            return
+        self._connect_telebot.work = True
+        self._connect_telebot.set_message(message)
+        self._connect_telebot.delete_keyboard()
+        self._simple_mode()
+        self._input_mode()
+        self._connect_telebot.work = False
+        logging.info(f'Закончена обработка')
 
     def _input_mode(self) -> bool:
         """
