@@ -120,7 +120,7 @@ class TaskRule:
                 list_cash_sell.append(id_cash)
             id_cash_buy = ModelCash.add(id_safe_user=self.id_safe_user, date_time=self.date_time, coin=self.coin,
                                         amount_buy=self.amount, price_buy=self._get_price_buy(), id_task=self._id_task,
-                                        coin_avr=self.coin_avr)
+                                        coin_avr=self.list_cash[0].coin)
             for id_cash_sell in list_cash_sell:
                 ModelEventBank.add(id_task=self._id_task, type=self._command_type, date_time=self.date_time,
                                    id_cash_buy=id_cash_buy, id_cash_sell=id_cash_sell, fee=self.fee,
