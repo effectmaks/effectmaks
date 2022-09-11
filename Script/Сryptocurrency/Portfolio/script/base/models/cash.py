@@ -186,15 +186,15 @@ class ModelCash:
                 str_id += str(item) + str_end
             sql_cash_no_view = f'and not cash.id in ({str_id})'
         if filter_cash_date_before != None:
-            sql_cash_date_before = f'and cash.date_time_str <= "{filter_cash_date_before}"'
+            sql_cash_date_before = f'and cash.date_time <= "{filter_cash_date_before}"'
         try:
             dict_out = {}
             connect = ConnectSqlite.get_connect()
-            cash_list = connect.execute_sql('select id, coin, amount, price_buy, coin_avr, date_time_str '
+            cash_list = connect.execute_sql('select id, coin, amount, price_buy, coin_avr, date_time '
                                             'from (select cash.id, cash.coin, (cash.amount_buy - '
                                             'CASE WHEN sum_cash_sell.amount IS NULL '
                                             'THEN 0 else sum_cash_sell.amount end) as amount, '
-                                            'cash.price_buy, cash.coin_avr,cash.date_time_str '
+                                            'cash.price_buy, cash.coin_avr,cash.date_time '
                                             'from cash '
                                             'left join (select id_cash, sum(amount_sell) as amount '
                                             'from cashsell group by id_cash) as sum_cash_sell '
