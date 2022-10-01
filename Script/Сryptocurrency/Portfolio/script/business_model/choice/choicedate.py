@@ -24,6 +24,10 @@ class ChoiceDate:
 
     @classmethod
     def convert(cls, date_time_str: str) -> datetime:
+        date_time = cls._variant_6(date_time_str)
+        if date_time:
+            return date_time
+
         date_time = cls._variant_5(date_time_str)
         if date_time:
             return date_time
@@ -108,6 +112,19 @@ class ChoiceDate:
        """
         try:
             template: str = '%Y-%m-%d %H:%M:%S.%f'
+            return datetime.strptime(date_time_str, template)
+        except Exception:
+            logging.info(f'cls:{cls.__name__} def:{cls._variant_5.__name__} Ошибка конвертации по шаблону "{template}"')
+
+    @classmethod
+    def _variant_6(cls, date_time_str: str) -> datetime:
+        """
+       Конвертация используя шаблон
+       :param date_time_str: Дата и время строковая
+       :return: Новая дата и время
+       """
+        try:
+            template: str = '%Y/%m/%d %H:%M:%S'
             return datetime.strptime(date_time_str, template)
         except Exception:
             logging.info(f'cls:{cls.__name__} def:{cls._variant_5.__name__} Ошибка конвертации по шаблону "{template}"')
