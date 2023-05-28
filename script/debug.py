@@ -21,6 +21,5 @@ logging.basicConfig(
 
 if __name__ == '__main__':
     d = ModelTask.get_dict_completed(481687938, 'input')
-    print(d)
 
 

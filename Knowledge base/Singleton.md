@@ -1,1 +1,0 @@
-[Singleton в Python](https://webdevblog.ru/realizaciya-shablona-singleton-v-python/)

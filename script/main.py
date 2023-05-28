@@ -1,5 +1,7 @@
 import logging
 import sys
+import datetime
+from logging.handlers import TimedRotatingFileHandler
 
 import os
 import time
@@ -8,16 +10,13 @@ from dotenv import load_dotenv
 from telegram_bot.api.users import Users
 from telegram_bot.api.telegramApi import Message, TypeMessage
 
+log_file = datetime.datetime.now().strftime("%Y_%m_%d") + ".log"
 
-# настройка логирования
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",  # формат вывода строки
-    handlers=[
-        logging.FileHandler("telegram_bot/debug.log"),  # лог-файл сохранения
-        logging.StreamHandler(sys.stdout)
-    ]
-)
+# Создание обработчика логов для Telebot и других модулей в один файл
+handler = TimedRotatingFileHandler(f"logs/all_{log_file}", when="midnight", interval=1, backupCount=10)
+handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+handler.setLevel(logging.DEBUG)
+logging.getLogger().addHandler(handler)
 
 
 def check_start_bot(bot_telegram: TeleBot):
@@ -37,7 +36,7 @@ def start_bot():
     Создание прерываний по новому сообщению и нажатие на кнопку
     """
     logging.info('Команда подключить TeleBot')
-    load_dotenv('telegram_bot/api/keys.env')
+    load_dotenv('.env')
     bot_telegram = TeleBot(os.getenv('API_token'))
 
     @bot_telegram.message_handler(content_types=['text'])

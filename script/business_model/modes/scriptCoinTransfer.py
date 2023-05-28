@@ -70,9 +70,7 @@ class ScriptCoinTransfer:
                                                 'Выберите тип сейфа снятия:')
         working: bool = self._choice_safe_sell.work()
         if working:
-            print(3)
             self._next_function.set(self._work_choice_safe_sell)  # еще не выбрано, повторить
-            print(4)
         else:
             logging.info('Выбран id_safe_sell')
             self._work_choice_coin_sell()  # далее выполнить

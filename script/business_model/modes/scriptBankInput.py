@@ -85,7 +85,8 @@ class ScriptBankInput:
         Команда сформировать amount
         """
         if not self._choice_amount:
-            self._choice_amount = ChoiceFloat(self._connect_telebot, question_main='Введите объем пополнения:')
+            self._choice_amount = ChoiceFloat(self._connect_telebot, question_main='Введите итоговый объем пополнения '
+                                                                                   'c вычетом комиссии:')
         working: bool = self._choice_amount.work()
         if working:
             self._next_function.set(self._work_choice_amount)  # еще не выбрано, повторить

@@ -99,9 +99,7 @@ class ChoiceSafe:
             safes_dict[self._MODE_ADD] = self._MODE_ADD
         self._dict_safes_user = safes_dict
         self._connect_telebot.view_keyboard('Выберите сейф:', dict_view=safes_dict)
-        print(1)  # отладка
         self._next_function.set(self._input_safe_list_check)
-        print(2)  # отладка
 
     def _input_safe_list_check(self):
         """
